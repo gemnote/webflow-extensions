@@ -1,3 +1,8 @@
+/*************************************
+ * Cookie Helpers
+ *************************************/
+
+// Get the value of a cookie by name
 const getCookie = (name) => {
     const cookieString = document.cookie;
     const cookies = cookieString.split('; ');
@@ -10,6 +15,7 @@ const getCookie = (name) => {
     return null;
 }
 
+// Set a cookie with name, value, and expiration in days
 const setCookie = (name, value, daysToExpire) => {
     const date = new Date();
     date.setTime(date.getTime() + daysToExpire * 24 * 60 * 60 * 1000);
@@ -17,9 +23,15 @@ const setCookie = (name, value, daysToExpire) => {
     document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/`;
 }
 
+/*************************************
+ * Wishlist Counter
+ *************************************/
+
+// Update wishlist counter in both desktop and mobile views
 const updateWishlistCounter = () => {
     const wishlistCookie = getCookie('lookbook');
     const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
+
     const wishlistCounter = document.getElementById('wishlist-counter');
     const wishlistMobileCounter = document.getElementById('mobile-wishlist-counter');
 
@@ -32,6 +44,11 @@ const updateWishlistCounter = () => {
     }
 }
 
+/*************************************
+ * Wishlist Logic
+ *************************************/
+
+// Add or remove product from wishlist, then update UI and cookie
 const saveToWishlist = (product) => {
     const wishlistCookie = getCookie('lookbook');
     let wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
@@ -39,8 +56,10 @@ const saveToWishlist = (product) => {
     const existingProductIndex = wishlistItems.findIndex((item) => item.text === product.Name);
 
     if (existingProductIndex !== -1) {
+        // Remove item if it already exists
         wishlistItems.splice(existingProductIndex, 1);
     } else {
+        // Add item if not in wishlist
         wishlistItems.push({ image: product.Image, price: product.Price, text: product.Name });
     }
 
@@ -48,6 +67,11 @@ const saveToWishlist = (product) => {
     updateWishlistCounter();
 }
 
+/*************************************
+ * Button Style Updates
+ *************************************/
+
+// Change button styles based on wishlist status
 const updateButtonStyles = () => {
     const wishlistCookie = getCookie('lookbook');
     const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
@@ -75,6 +99,11 @@ const updateButtonStyles = () => {
     });
 }
 
+/*************************************
+ * Product Click Event Listener
+ *************************************/
+
+// Attach click event to each product to handle wishlist logic
 const productItems = document.querySelectorAll('.home-product-item, .product-item');
 
 if (productItems.length > 0) {
@@ -99,9 +128,18 @@ if (productItems.length > 0) {
     console.log('No product items found.');
 }
 
+/*************************************
+ * Initial Load
+ *************************************/
+
 updateWishlistCounter();
 updateButtonStyles();
 
+/*************************************
+ * DOM Cleanup (Webflow Branding)
+ *************************************/
+
+// Remove Webflow branding after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         document.querySelectorAll('.w-webflow-badge').forEach(badge => badge.remove());

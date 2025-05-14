@@ -1,11 +1,21 @@
+/*************************************
+ * Parse URL Path Segments
+ *************************************/
+
+// Extract the current URL path segments and get the second-to-last segment
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
 
+/*************************************
+ * Fetch and Render Box Products
+ *************************************/
+
+// Fetch product data based on URL, then render them into the DOM
 const fetchBoxProducts = async () => {
     const lastSegment = boxSiteUrl[boxSiteUrl.length - 1];
-
     let collection_name = "";
 
+    // Determine the collection name based on URL
     switch (lastSegment) {
         case 'luxury-rigid-boxes':
             collection_name = 'rigid-boxes';
@@ -23,6 +33,8 @@ const fetchBoxProducts = async () => {
 
     const isValidCollection = typeof collection_name === 'string' && collection_name.trim() !== '';
     const collectionSlug = isValidCollection ? collection_name : '';
+
+    // API endpoint for fetching products by collection slug
     const endpoint = `https://merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
     try {
@@ -31,9 +43,11 @@ const fetchBoxProducts = async () => {
 
         const productsRoot = document.getElementById("box-products-root");
 
+        // Create wrapper container for product cards
         const wrapper = document.createElement("div");
         wrapper.className = `packages-wrap ${data.count > 3 ? "_4-grid" : ""}`;
 
+        // Generate product cards and append to wrapper
         data.results.forEach(product => {
             const block = document.createElement("div");
             block.className = "packages-block";
@@ -50,7 +64,8 @@ const fetchBoxProducts = async () => {
             wrapper.appendChild(block);
         });
 
-        productsRoot.innerHTML = ""; // Clear previous content
+        // Replace any existing content with the new product list
+        productsRoot.innerHTML = "";
         productsRoot.appendChild(wrapper);
 
         return document.querySelectorAll('.packages-block');
@@ -58,10 +73,15 @@ const fetchBoxProducts = async () => {
         console.error("Failed to fetch products:", err);
         return [];
     } finally {
-        refreshButtonStyles();
+        refreshButtonStyles(); // Ensure button styles are updated
     }
 };
 
+/*************************************
+ * Setup Click Events on Box Products
+ *************************************/
+
+// Add click listeners to each product block to handle wishlist logic
 const setupBoxProductClickHandlers = async () => {
     const productItems = await fetchBoxProducts();
 
@@ -84,7 +104,7 @@ const setupBoxProductClickHandlers = async () => {
                     };
 
                     saveToWishlist(product);
-                    refreshButtonStyles();
+                    refreshButtonStyles(); // Update button appearance
                 });
             }
         });
@@ -93,5 +113,10 @@ const setupBoxProductClickHandlers = async () => {
     }
 };
 
+/*************************************
+ * Conditional Initialization
+ *************************************/
+
+// Only run the product fetch and setup if URL matches expected pattern
 if (boxSubUrl === 'products-packaging')
     setupBoxProductClickHandlers();

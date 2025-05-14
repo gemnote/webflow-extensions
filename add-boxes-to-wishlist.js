@@ -1,5 +1,5 @@
 /*************************************
- * Cookie Helpers (Renamed)
+ * Cookie Helpers
  *************************************/
 const getWishlistCookie = (name) => {
     const cookieString = document.cookie;
@@ -21,7 +21,7 @@ const setWishlistCookie = (name, value, daysToExpire) => {
 };
 
 /*************************************
- * Wishlist Counter (Renamed)
+ * Wishlist Counter
  *************************************/
 const refreshWishlistCounter = () => {
     const wishlistCookie = getWishlistCookie('lookbook');
@@ -39,7 +39,7 @@ const refreshWishlistCounter = () => {
 };
 
 /*************************************
- * Save / Remove from Wishlist (Renamed)
+ * Save / Remove from Wishlist
  *************************************/
 const toggleWishlistItem = (altProduct) => {
     const wishlistCookie = getWishlistCookie('lookbook');
@@ -63,7 +63,7 @@ const toggleWishlistItem = (altProduct) => {
 };
 
 /*************************************
- * Update Button Styles (Renamed)
+ * Update Button Styles
  *************************************/
 const refreshButtonStyles = () => {
     const wishlistCookie = getWishlistCookie('lookbook');
@@ -96,7 +96,7 @@ const refreshButtonStyles = () => {
 };
 
 /*************************************
- * Set Up Click Handlers (Renamed)
+ * Set Up Click Handlers
  *************************************/
 const altProductLists = document.querySelectorAll('.packages-block');
 
@@ -134,7 +134,7 @@ if (altProductLists.length > 0) {
 }
 
 /*************************************
- * Initial Load (Renamed)
+ * Initial Load
  *************************************/
 refreshWishlistCounter();
 refreshButtonStyles();

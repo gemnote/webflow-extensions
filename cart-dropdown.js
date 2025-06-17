@@ -2,7 +2,7 @@
  * Cart Dropdown Initialization on Page Load
  ***********************************************/
 document.addEventListener("DOMContentLoaded", function () {
-    const cartBlocks = document.querySelectorAll(".cart-icon");
+    const cartBlocks = document.querySelectorAll(".cart-block");
     const mobileNavMenu = document.querySelector(".mobile-nav-menu"); // Mobile navbar container
 
     if (cartBlocks.length === 0) return; // Prevent errors if cart elements are missing

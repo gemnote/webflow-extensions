@@ -1,86 +1,86 @@
 /***********************************************
- * Wishlist Dropdown Initialization on Page Load
+ * Cart Dropdown Initialization on Page Load
  ***********************************************/
 document.addEventListener("DOMContentLoaded", function () {
-    const wishlistBlocks = document.querySelectorAll(".wishlist-icon");
+    const cartBlocks = document.querySelectorAll(".cart-icon");
     const mobileNavMenu = document.querySelector(".mobile-nav-menu"); // Mobile navbar container
 
-    if (wishlistBlocks.length === 0) return; // Prevent errors if wishlist elements are missing
+    if (cartBlocks.length === 0) return; // Prevent errors if cart elements are missing
 
-    wishlistBlocks.forEach((wishlistBlock) => {
+    cartBlocks.forEach((cartBlock) => {
 
         /***********************************************
-         * Create and Insert Wishlist Dropdown
+         * Create and Insert Cart Dropdown
          ***********************************************/
-        const wishlistDropdown = document.createElement("div");
-        wishlistDropdown.classList.add("wishlist-dropdown");
-        wishlistDropdown.innerHTML = `
-            <div class="favorites-header px-5">
-              <h3 class="wishlist-title">Favorites (0 items)</h3>
+        const cartDropdown = document.createElement("div");
+        cartDropdown.classList.add("cart-dropdown");
+        cartDropdown.innerHTML = `
+            <div class="cart-header px-5">
+              <h3 class="cart-title">Cart (0 items)</h3>
               <img class="cursor-pointer close-dropdown" src="https://www.gemnote.com/images/common/cross.svg">
             </div>
-            <div class="favorites-empty px-5">
-              <h2>You have no favorites yet.</h2>
-              <p>Add your favorite items to the wishlist!</p>
+            <div class="cart-empty px-5">
+              <h2>Your cart is empty.</h2>
+              <p>Add items to your cart to get started!</p>
               <div style="display:flex; justify-content: center;">
                 <a href="https://www.gemnote.com/lookbook" class="btn-start">explore our lookbook</a>
               </div>
             </div>
-            <div class="favorites-list px-5" style="display: none;">
-              <ul class="wishlist-items"></ul>
+            <div class="cart-list px-5" style="display: none;">
+              <ul class="cart-items"></ul>
             </div>
-            <div class="favorites-footer">
+            <div class="cart-footer">
               <a href="https://www.gemnote.com/start-a-project" class="btn-start">start a project</a>
             </div>
         `;
 
         // Insert dropdown appropriately based on device (mobile or desktop)
-        if (mobileNavMenu && mobileNavMenu.contains(wishlistBlock)) {
+        if (mobileNavMenu && mobileNavMenu.contains(cartBlock)) {
             // Mobile: insert after mobile nav menu
-            mobileNavMenu.parentNode.insertBefore(wishlistDropdown, mobileNavMenu.nextSibling);
-            wishlistDropdown.classList.add("mobile-wishlist-dropdown");
+            mobileNavMenu.parentNode.insertBefore(cartDropdown, mobileNavMenu.nextSibling);
+            cartDropdown.classList.add("mobile-cart-dropdown");
         } else {
             // Desktop: insert into the current nav container
-            wishlistBlock.parentNode.appendChild(wishlistDropdown);
+            cartBlock.parentNode.appendChild(cartDropdown);
         }
 
-        wishlistDropdown.style.display = "none";
+        cartDropdown.style.display = "none";
 
         /***********************************************
          * Dropdown Toggle & Event Bindings
          ***********************************************/
 
-        // Toggle dropdown on wishlist icon click
-        wishlistBlock.addEventListener("click", function (event) {
+        // Toggle dropdown on cart icon click
+        cartBlock.addEventListener("click", function (event) {
             event.stopPropagation();
             mobileNavMenu.style.display = "none"; // Hide mobile menu if open
-            closeOtherDropdowns(wishlistDropdown); // Close other dropdowns if open
+            closeOtherDropdowns(cartDropdown); // Close other dropdowns if open
 
-            wishlistDropdown.style.display = wishlistDropdown.style.display === "flex" ? "none" : "flex";
-            updateWishlistUI(wishlistDropdown);
+            cartDropdown.style.display = cartDropdown.style.display === "flex" ? "none" : "flex";
+            updateCartUI(cartDropdown);
         });
 
         // Close dropdown via close button
-        wishlistDropdown.querySelector(".close-dropdown").addEventListener("click", function () {
-            wishlistDropdown.style.display = "none";
+        cartDropdown.querySelector(".close-dropdown").addEventListener("click", function () {
+            cartDropdown.style.display = "none";
         });
 
         // Close dropdown when clicking outside
         document.addEventListener("click", function (event) {
-            if (!wishlistBlock.contains(event.target) && !wishlistDropdown.contains(event.target)) {
-                wishlistDropdown.style.display = "none";
+            if (!cartBlock.contains(event.target) && !cartDropdown.contains(event.target)) {
+                cartDropdown.style.display = "none";
             }
         });
 
-        // Initialize dropdown with saved wishlist
-        updateWishlistUI(wishlistDropdown);
+        // Initialize dropdown with saved cart items
+        updateCartUI(cartDropdown);
     });
 
     /***********************************************
-     * Close All Other Wishlist Dropdowns
+     * Close All Other Cart Dropdowns
      ***********************************************/
     function closeOtherDropdowns(currentDropdown) {
-        document.querySelectorAll(".wishlist-dropdown").forEach(dropdown => {
+        document.querySelectorAll(".cart-dropdown").forEach(dropdown => {
             if (dropdown !== currentDropdown) {
                 dropdown.style.display = "none";
             }
@@ -88,35 +88,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /***********************************************
-     * Render Wishlist UI from Cookie
+     * Render Cart UI from Cookie
      ***********************************************/
-    function updateWishlistUI(wishlistDropdown) {
-        const wishlistCookie = getCookie("lookbook");
-        const wishlistItems = wishlistCookie ? JSON.parse(decodeURIComponent(wishlistCookie)) : [];
+    function updateCartUI(cartDropdown) {
+        const cartCookie = getCookie("lookbook");
+        const cartItems = cartCookie ? JSON.parse(decodeURIComponent(cartCookie)) : [];
 
-        const wishlistTitle = wishlistDropdown.querySelector(".wishlist-title");
-        const wishlistList = wishlistDropdown.querySelector(".wishlist-items");
-        const favoritesEmpty = wishlistDropdown.querySelector(".favorites-empty");
-        const favoritesList = wishlistDropdown.querySelector(".favorites-list");
-        const favoritesFooter = wishlistDropdown.querySelector(".favorites-footer");
+        const cartTitle = cartDropdown.querySelector(".cart-title");
+        const cartList = cartDropdown.querySelector(".cart-items");
+        const cartEmpty = cartDropdown.querySelector(".cart-empty");
+        const cartListSection = cartDropdown.querySelector(".cart-list");
+        const cartFooter = cartDropdown.querySelector(".cart-footer");
 
         // Update title with item count
-        wishlistTitle.textContent = `Favorites (${wishlistItems.length} item${wishlistItems.length !== 1 ? "s" : ""})`;
+        cartTitle.textContent = `Cart (${cartItems.length} item${cartItems.length !== 1 ? "s" : ""})`;
 
         // Toggle between empty and list view
-        if (wishlistItems.length === 0) {
-            favoritesEmpty.style.display = "flex";
-            favoritesList.style.display = "none";
-            favoritesFooter.style.display = "none";
+        if (cartItems.length === 0) {
+            cartEmpty.style.display = "flex";
+            cartListSection.style.display = "none";
+            cartFooter.style.display = "none";
         } else {
-            favoritesEmpty.style.display = "none";
-            favoritesList.style.display = "block";
-            favoritesFooter.style.display = "flex";
+            cartEmpty.style.display = "none";
+            cartListSection.style.display = "block";
+            cartFooter.style.display = "flex";
 
-            // Populate wishlist items dynamically
-            wishlistList.innerHTML = wishlistItems
+            // Populate cart items dynamically
+            cartList.innerHTML = cartItems
                 .map((item, index) => `
-                    <li class="favorite-item px-5" data-index="${index}">
+                    <li class="cart-item px-5" data-index="${index}">
                       <div class="list-container gap-4 justify-evenly mt-7">
                         <div class="image-wrapper">
                           <img class="object-cover image-container" src="${item.image}" alt="${item.text}">
@@ -132,28 +132,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Bind remove events for each item
-        wishlistDropdown.querySelectorAll(".remove-button").forEach((btn) => {
+        cartDropdown.querySelectorAll(".remove-button").forEach((btn) => {
             btn.addEventListener("click", function (event) {
                 event.stopPropagation();
-                removeFromWishlist(parseInt(this.dataset.index, 10), wishlistDropdown);
+                removeFromCart(parseInt(this.dataset.index, 10), cartDropdown);
             });
         });
     }
 
     /***********************************************
-     * Remove Item from Wishlist and Update UI
+     * Remove Item from Cart and Update UI
      ***********************************************/
-    function removeFromWishlist(index, wishlistDropdown) {
-        const wishlistCookie = getCookie("lookbook");
-        let wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
+    function removeFromCart(index, cartDropdown) {
+        const cartCookie = getCookie("lookbook");
+        let cartItems = cartCookie ? JSON.parse(cartCookie) : [];
 
-        if (wishlistItems[index]) {
-            wishlistItems.splice(index, 1); // Remove item
-            setCookie("lookbook", JSON.stringify(wishlistItems), 7); // Update cookie
-            updateWishlistUI(wishlistDropdown); // Re-render UI
+        if (cartItems[index]) {
+            cartItems.splice(index, 1); // Remove item
+            setCookie("lookbook", JSON.stringify(cartItems), 7); // Update cookie
+            updateCartUI(cartDropdown); // Re-render UI
         }
 
-        updateWishlistCounter(); // Refresh wishlist count (if any)
+        // updateCartCounter(); // Refresh cart count (if any)
         updateButtonStyles();    // Sync styles with changes
         refreshButtonStyles();   // Optional additional UI refresh
     }

@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
               <img class="cursor-pointer close-dropdown" src="https://www.gemnote.com/images/common/cross.svg">
             </div>
             <div class="cart-empty px-5">
-              <h2>Your cart is empty.</h2>
-              <p>Add items to your cart to get started!</p>
+              <h2>You have no products yet.</h2>
+              <p>Add new products to the cart!</p>
               <div style="display:flex; justify-content: center;">
                 <a href="https://www.gemnote.com/lookbook" class="btn-start">explore our lookbook</a>
               </div>

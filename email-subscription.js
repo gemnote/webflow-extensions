@@ -1,4 +1,3 @@
-
 const form = document.getElementById("email-form");
 const subscriptionSuccessText = document.getElementById("subscription-text-success");
 const subscriptionErrorText = document.getElementById("subscription-text-error"); // make sure this exists in your HTML
@@ -8,6 +7,12 @@ const submitBtn = form?.querySelector('input[type="submit"]');
 // optional: helper to show/hide messages
 const show = (el) => el && (el.style.display = "flex");
 const hide = (el) => el && (el.style.display = "none");
+
+
+const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+}
 
 const submitSubscription = async () => {
     // validate

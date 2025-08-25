@@ -60,11 +60,23 @@ const submitSubscription = async () => {
 // attach to the form submit
 const attach = () => {
     if (!form) return;
-    form.addEventListener("submit", (e) => {
-        e.preventDefault(); // stop Webflow's default form POST
-        submitSubscription();
-    });
+
+    // capture: true runs before Webflow’s own listener
+    form.addEventListener(
+        "submit",
+        (e) => {
+            e.preventDefault();
+            // block all other submit listeners (incl. Webflow’s)
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === "function") {
+                e.stopImmediatePropagation();
+            }
+            submitSubscription();
+        },
+        { capture: true }
+    );
 };
+
 
 // be safe about timing in Webflow
 if (document.readyState === "loading") {

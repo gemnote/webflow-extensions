@@ -29,7 +29,7 @@ const submitSubscription = async () => {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-        const res = await fetch("https://nuxt.gemnote.com/api/subscribe", {
+        const res = await fetch("https://nuxt.gemnote.com/api/email-subscription", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({email: emailSubscriptionInput.value}),

@@ -1,4 +1,3 @@
-import {isValidEmail} from "./helpers/email-verification";
 
 const form = document.getElementById("email-form");
 const subscriptionSuccessText = document.getElementById("subscription-text-success");

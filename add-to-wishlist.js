@@ -80,10 +80,8 @@ const updateButtonStyles = () => {
     productItems.forEach((item) => {
         const productName = item.querySelector('.product-heading').textContent;
         const addButton = item.querySelector('.add-button.w-button');
-        const heartIcon = item.querySelector('.heart-icon svg path');
-        // Adjust selector if heart icon structure differs
 
-        const isInWishlist = wishlistItems.some((wishlistItem) => wishlistItem.text === productName);
+        const isInWishlist = wishlistItems.some((item) => item.text === productName);
 
         if (addButton) {
             if (isInWishlist) {
@@ -91,22 +89,54 @@ const updateButtonStyles = () => {
                 addButton.style.color = 'white';
                 addButton.style.backgroundImage = 'url(https://cdn.prod.website-files.com/6718ab0c5f7e6e98b11c3a7c/673742d3be3c146f36db76bb_gray-round-icon.png)';
                 addButton.textContent = 'added to favorites';
-
-                if (heartIcon) heartIcon.setAttribute('fill', 'black');
             } else {
                 addButton.style.backgroundColor = '';
                 addButton.style.color = '';
                 addButton.style.backgroundImage = '';
                 addButton.textContent = 'add to favorites';
+            }
+        }
+    });
+}
 
-                if (heartIcon) heartIcon.setAttribute('fill', 'none');
-                // Or default color e.g., "#ccc" or "currentColor"
+
+// Change button styles (heart fill) based on wishlist status for LOOKBOOK cards
+const updateFavoritesIconStyles = () => {
+    const wishlistCookie = getCookie('lookbook');
+    const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
+
+    // target the new lookbook cards
+    const productItems = document.querySelectorAll('.lookbook-product-card-main');
+
+    productItems.forEach((item) => {
+        const nameEl = item.querySelector('.lookbook-product-name');
+        const productName = nameEl
+            ? nameEl.textContent.trim()
+            : (item.dataset.name || '').trim();
+
+        const isInWishlist = wishlistItems.some(
+            (wishlistItem) => wishlistItem.text === productName
+        );
+
+        // your heart is inside the fav button's SVG path
+        const heartPath = item.querySelector('.fav-icon-container-main button svg path');
+        const heartSvg  = item.querySelector('.fav-icon-container-main button svg');
+
+        if (heartPath) {
+            if (isInWishlist) {
+                // filled heart
+                heartPath.setAttribute('fill', '#22211F');
+                heartPath.setAttribute('stroke', '#22211F');
+                heartSvg && heartSvg.classList.add('is-fav');
+            } else {
+                // outline heart
+                heartPath.setAttribute('fill', 'none');
+                heartPath.setAttribute('stroke', '#22211F');
+                heartSvg && heartSvg.classList.remove('is-fav');
             }
         }
     });
 };
-
-
 /*************************************
  * Product Click Event Listener
  *************************************/
@@ -135,6 +165,7 @@ if (productItems.length > 0) {
 } else {
     console.log('No product items found.');
 }
+
 
 /*************************************
  * Initial Load

@@ -109,7 +109,7 @@ const fetchAndRenderProducts = async () => {
         console.error("Failed to fetch products:", err);
         return [];
     } finally {
-        if (typeof updateButtonStyles === "function") updateButtonStyles();
+        if (typeof updateFavoritesIconStyles === "function") updateFavoritesIconStyles();
     }
 };
 
@@ -150,7 +150,7 @@ const setupProductClickHandlers = async () => {
                     console.info("saveToWishlist not defined. Product payload:", product);
                 }
 
-                if (typeof updateButtonStyles === "function") updateButtonStyles();
+                if (typeof updateFavoritesIconStyles === "function") updateFavoritesIconStyles();
             };
 
             // click on the whole card

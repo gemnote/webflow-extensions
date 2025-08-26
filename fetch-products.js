@@ -62,7 +62,7 @@ const fetchAndRenderProducts = async () => {
             if (product.id) card.dataset.productId = product.id;
 
             const imageUrl = product.image_url ?? product.image ?? "";
-            const brandName = product.brand_name ?? "";
+            const brandName = product.brand_name ?? "Generic";
             const productName = product.name ?? "";
             const msrp = product.msrp ?? "";
 

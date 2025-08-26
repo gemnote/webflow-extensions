@@ -80,8 +80,10 @@ const updateButtonStyles = () => {
     productItems.forEach((item) => {
         const productName = item.querySelector('.product-heading').textContent;
         const addButton = item.querySelector('.add-button.w-button');
+        const heartIcon = item.querySelector('.heart-icon svg path');
+        // Adjust selector if heart icon structure differs
 
-        const isInWishlist = wishlistItems.some((item) => item.text === productName);
+        const isInWishlist = wishlistItems.some((wishlistItem) => wishlistItem.text === productName);
 
         if (addButton) {
             if (isInWishlist) {
@@ -89,15 +91,21 @@ const updateButtonStyles = () => {
                 addButton.style.color = 'white';
                 addButton.style.backgroundImage = 'url(https://cdn.prod.website-files.com/6718ab0c5f7e6e98b11c3a7c/673742d3be3c146f36db76bb_gray-round-icon.png)';
                 addButton.textContent = 'added to favorites';
+
+                if (heartIcon) heartIcon.setAttribute('fill', 'black');
             } else {
                 addButton.style.backgroundColor = '';
                 addButton.style.color = '';
                 addButton.style.backgroundImage = '';
                 addButton.textContent = 'add to favorites';
+
+                if (heartIcon) heartIcon.setAttribute('fill', 'none');
+                // Or default color e.g., "#ccc" or "currentColor"
             }
         }
     });
-}
+};
+
 
 /*************************************
  * Product Click Event Listener

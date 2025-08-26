@@ -1,7 +1,8 @@
 .lookbook-product-grid-main {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    padding: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
     column-gap: 24px;
     row-gap: 48px;
 }
@@ -26,7 +27,6 @@
 
 .hover-zoom {
     width: 100%;
-    max-width: 292px;
     height: auto;
     aspect-ratio: 1 / 1;
     display: flex;

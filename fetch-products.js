@@ -113,6 +113,32 @@ const fetchAndRenderProducts = async () => {
     }
 };
 
+const handleFillFavoritesIcon = (item) => {
+    const nameEl = item.querySelector(".lookbook-product-name");
+    const productName = nameEl ? nameEl.textContent.trim() : (item.dataset.name || "").trim();
+
+    const wishlistCookie = getCookie('lookbook');
+    const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
+    const isInWishlist = wishlistItems.some(w => w.text === productName);
+
+    const heartSvg = item.querySelector('.fav-icon-container-main button svg');
+    const heartPath = item.querySelector('.fav-icon-container-main button svg path');
+
+    if (heartSvg && heartPath) {
+        if (isInWishlist) {
+            heartPath.style.fill = '#22211F';
+            heartPath.style.stroke = '#22211F';
+            heartSvg.classList.remove('fill-none');
+            heartSvg.classList.add('is-fav');
+        } else {
+            heartPath.style.fill = 'none';
+            heartPath.style.stroke = '#22211F';
+            heartSvg.classList.add('fill-none');
+            heartSvg.classList.remove('is-fav');
+        }
+    }
+}
+
 /*************************************
  * Setup Product Click Events
  *************************************/
@@ -149,6 +175,8 @@ const setupProductClickHandlers = async () => {
                 } else {
                     console.info("saveToWishlist not defined. Product payload:", product);
                 }
+
+                handleFillFavoritesIcon(item)
 
                 if (typeof updateFavoritesIconStyles === "function") updateFavoritesIconStyles();
             };

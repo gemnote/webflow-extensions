@@ -1,8 +1,7 @@
 .lookbook-product-grid-main {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    padding-left: 12px;
-    padding-right: 12px;
+    padding: 12px;
     column-gap: 24px;
     row-gap: 48px;
 }
@@ -15,7 +14,12 @@
     justify-content: space-between;
     height: 100%;
     box-sizing: border-box;
+    border-right: 1px solid black;
 }
+.lookbook-product-card-main:nth-child(5n) { border-right: none; }
+
+/* Top border on all but first row (5 items per row) */
+.lookbook-product-card-main:nth-child(n + 6) { border-top: 1px solid #E6E4DF; }
 
 .lookbook-product-card-main img {
     max-width: 100%;

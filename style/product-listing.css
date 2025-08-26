@@ -48,6 +48,10 @@
     right: 24px;
 }
 
+.fav-icon-container-main button {
+    background: transparent;
+}
+
 .lookbook-product-name {
     text-align: left;
     font-size: 16px;

@@ -1,0 +1,138 @@
+.lookbook-product-card-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.lookbook-product-card-main img {
+    max-width: 100%;
+    max-height: 292px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.hover-zoom {
+    width: 100%;
+    max-width: 292px;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hover-zoom--basic img {
+    transition: transform 0.6s ease;
+}
+
+.hover-zoom--basic:hover img {
+    transform: scale(1.03);
+}
+
+.fav-icon-container-main {
+    position: absolute;
+    top: 12px;
+    right: 24px;
+}
+
+.lookbook-product-name {
+    text-align: left;
+    font-size: 16px;
+    margin-bottom: 0;
+    font-weight: 500;
+    color: black;
+    font-family: "Inter";
+    width: 100%;
+    -webkit-line-clamp: 2;
+}
+
+.lookbook-product-brand {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: Inter, Arial, sans-serif;
+    color: #22211F;
+    margin-bottom: 0;
+    text-transform: capitalize;
+    text-decoration: underline;
+    letter-spacing: -0.32px;
+}
+
+.lookbook-product-brand:hover {
+    color: #AAA59B;
+}
+
+.lookbook-product-price-container {
+    display: flex;
+    justify-content: flex-start !important;
+    align-items: center;
+    gap: 24px;
+}
+
+.lookbook-product-price-container .min-units {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Inter, Arial, sans-serif;
+    color: #AAA59B;
+    margin-bottom: 0;
+}
+
+.price {
+    margin-bottom: 0;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: Inter, Arial, sans-serif;
+    color: black;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.bg-white-smoke {
+    background-color: #f5f5f5; /* Approximation of white-smoke */
+}
+
+.relative {
+    position: relative;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+.duration-300 {
+    transition-duration: 300ms;
+}
+
+.fill-none {
+    fill: none;
+}
+
+.hover\:fill-\[\#22211F\]:hover {
+    fill: #22211F;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.mt-\[8px\] {
+    margin-top: 8px;
+}
+
+.gap-\[6px\] {
+    gap: 6px;
+}

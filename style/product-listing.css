@@ -1,8 +1,6 @@
 .lookbook-product-grid-main {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    padding-left: 12px;
-    padding-right: 12px;
 }
 
 .lookbook-product-card-main {

@@ -189,6 +189,10 @@
       font-size: 9px;
   }
 
+  .gap-\[6px\] {
+    gap: 2px;
+  }
+
 @media (max-width: 480px) {
     .lookbook-product-grid-main {
         grid-template-columns: repeat(2, 1fr);

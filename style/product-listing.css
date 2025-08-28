@@ -176,6 +176,19 @@
   /* top borders for rows after the first in a 4-col grid */
   .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
 
+  .lookbook-product-name {
+      font-size: 9px;
+  }
+  .lookbook-product-brand {
+      font-size: 9px;
+  }
+  .price {
+      font-size: 9px;
+  }
+  .min-units {
+      font-size: 9px;
+  }
+
 @media (max-width: 480px) {
     .lookbook-product-grid-main {
         grid-template-columns: repeat(2, 1fr);

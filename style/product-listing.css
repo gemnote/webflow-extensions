@@ -168,7 +168,12 @@
     .lookbook-product-grid-main {
         grid-template-columns: repeat(4, 1fr);
     }
-}
+    
+    .lookbook-product-card-main:nth-child(4n) { border-right: none; }
+
+    /* Top border on all but first row (5 items per row) */
+    .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
+    }
 
 @media (max-width: 480px) {
     .lookbook-product-grid-main {

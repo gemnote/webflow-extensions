@@ -165,15 +165,16 @@
 }
 
 @media (max-width: 768px) {
-    .lookbook-product-grid-main {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .lookbook-product-card-main:nth-child(4n) { border-right: none; }
+  .lookbook-product-grid-main { grid-template-columns: repeat(4, 1fr); }
 
-    /* Top border on all but first row (5 items per row) */
-    .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
-    }
+  /* cancel the desktop rule on tablet */
+  .lookbook-product-card-main:nth-child(5n) { border-right: 1px solid black; }
+
+  /* now remove only the last column for a 4-col grid */
+  .lookbook-product-card-main:nth-child(4n) { border-right: none; }
+
+  /* top borders for rows after the first in a 4-col grid */
+  .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
 
 @media (max-width: 480px) {
     .lookbook-product-grid-main {

@@ -166,7 +166,7 @@
 
 @media (max-width: 768px) {
     .lookbook-product-grid-main {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 

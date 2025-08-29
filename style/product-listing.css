@@ -195,16 +195,24 @@
 
 @media (max-width: 480px) {
     .lookbook-product-grid-main {
-        grid-template-columns: repeat(1, 1fr);
-        padding-left: 10px;
-        padding-right: 10px;
-        column-gap: 16px;
-        row-gap: 52px;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      gap: 12px;
+      padding: 12px;
     }
 
+    .lookbook-product-grid-main::-webkit-scrollbar { display: none; }
+
     .lookbook-product-card-main {
-        border-right: 0px !important;
-        border-bottom: 1px solid black !important;
+      flex: 0 0 100%;
+      height: 220px;
+      scroll-snap-align: start;
+      border-radius: 12px;
+      background: #eee;
+      display: grid;
+      place-items: center;
     }
 
     .lookbook-product-card-main:nth-child(5n),

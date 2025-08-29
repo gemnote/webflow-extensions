@@ -151,6 +151,22 @@
     gap: 6px;
 }
 
+
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 12px;
+}
+
+.carousel::-webkit-scrollbar { display: none; }
+
+.slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
 /* Breakpoints */
 @media (max-width: 1024px) {
     .lookbook-product-grid-main {

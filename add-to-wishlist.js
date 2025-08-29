@@ -99,6 +99,38 @@ const updateButtonStyles = () => {
     });
 }
 
+
+// Change button styles (heart fill) based on wishlist status for LOOKBOOK cards
+const updateFavoritesIconStyles = () => {
+    const wishlistCookie = getCookie('lookbook');
+    const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
+    const productItems = document.querySelectorAll('.lookbook-product-card-main');
+
+    productItems.forEach((item) => {
+        const nameEl = item.querySelector('.lookbook-product-name');
+        const productName = nameEl ? nameEl.textContent.trim() : (item.dataset.name || '').trim();
+
+        const isInWishlist = wishlistItems.some(w => w.text === productName);
+
+        const heartSvg  = item.querySelector('.fav-icon-container-main button svg');
+        const heartPath = item.querySelector('.fav-icon-container-main button svg path');
+
+        if (!heartSvg || !heartPath) return;
+
+        if (isInWishlist) {
+            // beat Tailwind: set inline styles + remove fill-none on the svg
+            heartPath.style.fill   = '#22211F';
+            heartPath.style.stroke = '#22211F';
+            heartSvg.classList.remove('fill-none');
+            heartSvg.classList.add('is-fav');
+        } else {
+            heartPath.style.fill   = 'none';
+            heartPath.style.stroke = '#22211F';
+            heartSvg.classList.add('fill-none');
+            heartSvg.classList.remove('is-fav');
+        }
+    });
+};
 /*************************************
  * Product Click Event Listener
  *************************************/
@@ -127,6 +159,7 @@ if (productItems.length > 0) {
 } else {
     console.log('No product items found.');
 }
+
 
 /*************************************
  * Initial Load

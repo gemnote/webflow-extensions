@@ -207,12 +207,7 @@
 
     .lookbook-product-card-main {
       flex: 0 0 100%;
-      height: 220px;
       scroll-snap-align: start;
-      border-radius: 12px;
-      background: #eee;
-      display: grid;
-      place-items: center;
     }
 
     .lookbook-product-card-main:nth-child(5n),

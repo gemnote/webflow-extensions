@@ -201,4 +201,11 @@
         column-gap: 16px;
         row-gap: 52px;
     }
+
+    .lookbook-product-card-main:nth-child(5n),
+    .lookbook-product-card-main:nth-child(4n),
+    .lookbook-product-card-main:nth-child(n + 5) {
+        border-right: none;
+        border-top: none;
+    }
 }

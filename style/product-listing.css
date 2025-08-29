@@ -200,7 +200,7 @@
       scroll-snap-type: x mandatory;
       scroll-behavior: smooth;
       gap: 12px;
-      padding: 12px;
+      padding: 0px;
     }
 
     .lookbook-product-grid-main::-webkit-scrollbar { display: none; }

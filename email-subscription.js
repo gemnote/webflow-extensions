@@ -1,5 +1,3 @@
-import {isValidEmail} from "./helpers/email-verification";
-
 const form = document.getElementById("email-form");
 const subscriptionSuccessText = document.getElementById("subscription-text-success");
 const subscriptionErrorText = document.getElementById("subscription-text-error"); // make sure this exists in your HTML
@@ -9,6 +7,12 @@ const submitBtn = form?.querySelector('input[type="submit"]');
 // optional: helper to show/hide messages
 const show = (el) => el && (el.style.display = "flex");
 const hide = (el) => el && (el.style.display = "none");
+
+
+const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+}
 
 const submitSubscription = async () => {
     // validate
@@ -25,7 +29,7 @@ const submitSubscription = async () => {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-        const res = await fetch("https://nuxt.gemnote.com/api/subscribe", {
+        const res = await fetch("https://nuxt.gemnote.com/api/email-subscription", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({email: emailSubscriptionInput.value}),
@@ -56,11 +60,23 @@ const submitSubscription = async () => {
 // attach to the form submit
 const attach = () => {
     if (!form) return;
-    form.addEventListener("submit", (e) => {
-        e.preventDefault(); // stop Webflow's default form POST
-        submitSubscription();
-    });
+
+    // capture: true runs before Webflow’s own listener
+    form.addEventListener(
+        "submit",
+        (e) => {
+            e.preventDefault();
+            // block all other submit listeners (incl. Webflow’s)
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === "function") {
+                e.stopImmediatePropagation();
+            }
+            submitSubscription();
+        },
+        { capture: true }
+    );
 };
+
 
 // be safe about timing in Webflow
 if (document.readyState === "loading") {

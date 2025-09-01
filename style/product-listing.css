@@ -1,0 +1,235 @@
+.lookbook-product-grid-main {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.lookbook-product-card-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 100%;
+    box-sizing: border-box;
+    border-right: 1px solid black;
+    padding: 12px;
+}
+.lookbook-product-card-main:nth-child(5n) { border-right: none; }
+
+/* Top border on all but first row (5 items per row) */
+.lookbook-product-card-main:nth-child(n + 6) { border-top: 1px solid black; }
+
+.lookbook-product-card-main img {
+    max-width: 100%;
+    max-height: 292px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.hover-zoom {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hover-zoom--basic img {
+    transition: transform 0.6s ease;
+}
+
+.hover-zoom--basic:hover img {
+    transform: scale(1.03);
+}
+
+.fav-icon-container-main {
+    position: absolute;
+    top: 23px;
+    right: 24px;
+}
+
+.fav-icon-container-main button {
+    background: transparent;
+}
+
+.lookbook-product-name {
+    text-align: left;
+    font-size: 16px;
+    margin-bottom: 0;
+    font-weight: 500;
+    color: black;
+    font-family: "Inter";
+    width: 100%;
+    -webkit-line-clamp: 2;
+}
+
+.lookbook-product-brand {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: Inter, Arial, sans-serif;
+    color: #22211F;
+    margin-bottom: 0;
+    text-transform: capitalize;
+    text-decoration: underline;
+    letter-spacing: -0.32px;
+}
+
+.lookbook-product-brand:hover {
+    color: #AAA59B;
+}
+
+.lookbook-product-price-container {
+    display: flex;
+    justify-content: flex-start !important;
+    align-items: center;
+    gap: 24px;
+}
+
+.lookbook-product-price-container .min-units {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Inter, Arial, sans-serif;
+    color: #AAA59B;
+    margin-bottom: 0;
+}
+
+.price {
+    margin-bottom: 0;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: Inter, Arial, sans-serif;
+    color: black;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.bg-white-smoke {
+    background-color: #FFFFFF; /* Approximation of white-smoke */
+}
+
+.relative {
+    position: relative;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+.duration-300 {
+    transition-duration: 300ms;
+}
+
+.fill-none {
+    fill: none;
+}
+
+.hover\:fill-\[\#22211F\]:hover {
+    fill: #22211F;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.mt-\[8px\] {
+    margin-top: 8px;
+}
+
+.gap-\[6px\] {
+    gap: 6px;
+}
+
+
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 12px;
+}
+
+.carousel::-webkit-scrollbar { display: none; }
+
+.slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* Breakpoints */
+@media (max-width: 1024px) {
+    .lookbook-product-grid-main {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .lookbook-product-grid-main {
+        padding-left: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+  .lookbook-product-grid-main { grid-template-columns: repeat(4, 1fr); }
+
+  /* cancel the desktop rule on tablet */
+  .lookbook-product-card-main:nth-child(5n) { border-right: 1px solid black; }
+
+  /* now remove only the last column for a 4-col grid */
+  .lookbook-product-card-main:nth-child(4n) { border-right: none; }
+
+  /* top borders for rows after the first in a 4-col grid */
+  .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
+
+  .lookbook-product-name {
+      font-size: 9px;
+  }
+  .lookbook-product-brand {
+      font-size: 9px;
+  }
+  .price {
+      font-size: 9px;
+  }
+  .lookbook-product-price-container .min-units {
+      font-size: 9px;
+  }
+
+  .gap-\[6px\] {
+    gap: 2px;
+  }
+
+@media (max-width: 480px) {
+    .lookbook-product-grid-main {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      gap: 12px;
+      padding: 0px;
+    }
+
+    .lookbook-product-grid-main::-webkit-scrollbar { display: none; }
+
+    .lookbook-product-card-main {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+    }
+
+    .lookbook-product-card-main:nth-child(5n),
+    .lookbook-product-card-main:nth-child(4n),
+    .lookbook-product-card-main:nth-child(n + 5) {
+        border-right: none;
+        border-top: none;
+    }
+}

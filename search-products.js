@@ -1,49 +1,43 @@
-const form = document.getElementById("email-form");
-const submitBtn = form?.querySelector('input[type="submit"]');
-const searchInput = document.getElementById("desktop-navbar-searchbar");
+const searchForm = document.getElementById("email-form");
+const searchSubmitBtn = searchForm?.querySelector('input[type="submit"]');
+const searchBarInput = document.getElementById("desktop-navbar-searchbar");
 
-
-const submitSubscription = async () => {
-    const originalBtnValue = submitBtn?.value;
-    if (submitBtn) submitBtn.value = waitText;
-    if (submitBtn) submitBtn.disabled = true;
+const handleSearchProducts = async () => {
+    const originalBtnValue = searchSubmitBtn?.value;
+    if (searchSubmitBtn) {
+        searchSubmitBtn.value = "Searching...";
+        searchSubmitBtn.disabled = true;
+    }
 
     try {
-        console.log(searchInput.value)
-        searchInput.value = "";
+        console.log(searchBarInput.value);
+        searchBarInput.value = "";
     } catch (err) {
         console.log(err);
     } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.value = originalBtnValue || "subscribe";
+        if (searchSubmitBtn) {
+            searchSubmitBtn.disabled = false;
+            searchSubmitBtn.value = originalBtnValue || "Search";
         }
     }
 };
 
-const attach = () => {
-    if (!form) return;
-
-    // capture: true runs before Webflow’s own listener
-    form.addEventListener(
+const attachSearchForm = () => {
+    if (!searchForm) return;
+    searchForm.addEventListener(
         "submit",
         (e) => {
             e.preventDefault();
-            // block all other submit listeners (incl. Webflow’s)
             e.stopPropagation();
-            if (typeof e.stopImmediatePropagation === "function") {
-                e.stopImmediatePropagation();
-            }
-            submitSubscription();
+            if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+            handleSearchProducts();
         },
         { capture: true }
     );
 };
 
-
-// be safe about timing in Webflow
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", attach);
+    document.addEventListener("DOMContentLoaded", attachSearchForm);
 } else {
-    attach();
+    attachSearchForm();
 }

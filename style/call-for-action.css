@@ -1,0 +1,285 @@
+/* ========== BASE BUTTON STYLES ========== */
+
+.call-for-action,
+.call-for-action-white,
+.call-for-action-dark,
+.add-to-favorites {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 24px;
+    border-radius: 200px;
+    border: 1px solid;
+    font-family: Ppeditorialnew, sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 28px; /* 116.667% */
+    letter-spacing: -0.48px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Animation variables (scoped to CTAs only) */
+.call-for-action,
+.call-for-action-white,
+.call-for-action-dark {
+    --cta-nudge: 3px; /* horizontal shift for icon/text */
+    --cta-letterspace-boost: 0.2px; /* tiny letter-spacing on hover */
+}
+
+/* Smooth transform for icon + text (doesn't change layout) */
+.call-for-action svg,
+.call-for-action-white svg,
+.call-for-action-dark svg,
+.call-for-action .cta-label,
+.call-for-action-white .cta-label,
+.call-for-action-dark .cta-label {
+    transition: transform 220ms ease, letter-spacing 220ms ease, opacity 220ms ease;
+    will-change: transform;
+}
+
+/* ========== CALL FOR ACTION  ========== */
+
+.call-for-action {
+    background: var(--Cream, #F5F2EE);
+    border-color: black;
+    color: var(--Black, #22211F);
+}
+
+.call-for-action:hover {
+    background: var(--Grey, #AAA59B);
+    color: black;
+    backdrop-filter: blur(4.5px);
+}
+
+/* Icon fill change on hover */
+.call-for-action:hover .call-for-action-icon circle {
+    fill: #22211F;
+}
+
+/* Subtle spacing animation on hover */
+.call-for-action:hover svg {
+    transform: translateX(calc(-1 * var(--cta-nudge)));
+}
+
+.call-for-action:hover .cta-label {
+    transform: translateX(var(--cta-nudge));
+    letter-spacing: var(--cta-letterspace-boost);
+}
+
+/* ========== CALL FOR ACTION DARK  ========== */
+
+.call-for-action-dark {
+    background: black;
+    border-color: black;
+    color: #F5F2EE;
+}
+
+.call-for-action-dark:hover {
+    background: var(--Cream, #F5F2EE);
+    color: black;
+    backdrop-filter: blur(4.5px);
+}
+
+.call-for-action-dark:disabled {
+    background: transparent;
+    color: #AAA59B;
+    border-color: #AAA59B;
+    cursor: not-allowed;
+}
+
+/* Icon color states */
+.call-for-action-dark .call-for-action-icon-dark circle {
+    fill: #F5F2EE;
+}
+
+.call-for-action-dark:hover .call-for-action-icon-dark circle {
+    fill: #22211F;
+}
+
+.call-for-action-dark:disabled .call-for-action-icon-dark circle {
+    fill: #AAA59B;
+}
+
+/* Subtle spacing animation on hover */
+.call-for-action-dark:hover svg {
+    transform: translateX(calc(-1 * var(--cta-nudge)));
+}
+
+.call-for-action-dark:hover .cta-label {
+    transform: translateX(var(--cta-nudge));
+    letter-spacing: var(--cta-letterspace-boost);
+}
+
+/* ========== CALL FOR ACTION WHITE  ========== */
+
+.call-for-action-white {
+    background: #F5F2EE;
+    color: #22211F;
+}
+
+.call-for-action-white:hover {
+    background: #22211F;
+    color: #F5F2EE;
+}
+
+.call-for-action-icon-white circle {
+    fill: #22211F;
+}
+
+.call-for-action-white:hover .call-for-action-icon-white circle {
+    fill: #F5F2EE;
+    border-color: #F5F2EE !important;
+}
+
+/* Subtle spacing animation on hover */
+.call-for-action-white:hover svg {
+    transform: translateX(calc(-1 * var(--cta-nudge)));
+}
+
+.call-for-action-white:hover .cta-label {
+    transform: translateX(var(--cta-nudge));
+    letter-spacing: var(--cta-letterspace-boost);
+}
+
+/* ========== OPTIONAL: micro “nudge” keyframe for the dot on first hover ========== */
+
+@keyframes cta-dot-nudge {
+    0% {
+        transform: translateX(0);
+    }
+    60% {
+        transform: translateX(calc(-1 * var(--cta-nudge)));
+    }
+    100% {
+        transform: translateX(calc(-0.5 * var(--cta-nudge)));
+    }
+    /* settle slightly */
+}
+
+/* Apply the nudge once per hover */
+.call-for-action:hover svg,
+.call-for-action-white:hover svg,
+.call-for-action-dark:hover svg {
+    animation: cta-dot-nudge 260ms ease-out 1;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .call-for-action svg,
+    .call-for-action-white svg,
+    .call-for-action-dark svg,
+    .call-for-action .cta-label,
+    .call-for-action-white .cta-label,
+    .call-for-action-dark .cta-label {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* ========== ADD TO FAVORITES  ========== */
+
+.add-to-favorites {
+    background: var(--Black, #22211F);
+    border-color: var(--White, #FFF);
+    color: white;
+}
+
+.add-to-favorites:hover {
+    background: white;
+    color: black;
+}
+
+.add-to-favorites svg path {
+    stroke: #F5F2EE;
+    fill: none;
+    transition: stroke 0.3s ease, fill 0.3s ease;
+}
+
+.add-to-favorites:hover svg path {
+    stroke: black;
+    fill: black; /* optional: add fill if you want to change it too */
+}
+
+/* ========== RESPONSIVE TYPOGRAPHY ========== */
+
+@media (max-width: 1920px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 22px;
+        line-height: 26px;
+        padding: 8px 22px;
+    }
+
+    .call-for-action-white {
+        padding: 8px 48px;
+    }
+}
+
+@media (max-width: 1440px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 20px;
+        line-height: 24px;
+        padding: 8px 20px;
+    }
+
+    .call-for-action-white {
+        padding: 8px 24px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 18px;
+        line-height: 22px;
+        padding: 6px 18px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 20px;
+        line-height: 24px;
+        padding: 8px 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 18px;
+        line-height: 22px;
+        padding: 6px 20px;
+        width: 100%;
+    }
+
+    .add-to-favorites {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .call-for-action,
+    .call-for-action-white,
+    .call-for-action-dark,
+    .add-to-favorites {
+        font-size: 24px;
+        line-height: 20px;
+        padding: 8px 24px;
+    }
+}

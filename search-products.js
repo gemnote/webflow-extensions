@@ -24,13 +24,31 @@ const handleSearchProducts = async () => {
 
 const attachSearchForm = () => {
     if (!searchForm) return;
+
+    // Stop form submission completely
     searchForm.addEventListener(
         "submit",
         (e) => {
             e.preventDefault();
+            e.stopImmediatePropagation(); // kill all other listeners
             e.stopPropagation();
-            if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
             handleSearchProducts();
+            return false; // extra safety
+        },
+        { capture: true }
+    );
+
+    // Stop Enter key default behavior separately
+    searchBarInput?.addEventListener(
+        "keydown",
+        (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                e.stopPropagation();
+                handleSearchProducts();
+                return false;
+            }
         },
         { capture: true }
     );

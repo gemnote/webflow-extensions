@@ -1,6 +1,7 @@
 const searchForm = document.getElementById("email-form");
 const searchSubmitBtn = searchForm?.querySelector('input[type="submit"]');
 const searchBarInput = document.getElementById("desktop-navbar-searchbar");
+const searchCloseIcon = document.getElementById("search-bar-close-icon");
 
 const handleSearchProducts = async () => {
     const originalBtnValue = searchSubmitBtn?.value;
@@ -12,6 +13,7 @@ const handleSearchProducts = async () => {
     try {
         console.log(searchBarInput.value);
         searchBarInput.value = "";
+        toggleCloseIcon(); // hide close icon after clearing input
     } catch (err) {
         console.log(err);
     } finally {
@@ -22,6 +24,13 @@ const handleSearchProducts = async () => {
     }
 };
 
+// Show/hide the close icon based on input value
+const toggleCloseIcon = () => {
+    if (!searchCloseIcon) return;
+    searchCloseIcon.style.display = searchBarInput.value.trim() ? "block" : "none";
+};
+
+// Attach form logic
 const attachSearchForm = () => {
     if (!searchForm) return;
 
@@ -30,10 +39,10 @@ const attachSearchForm = () => {
         "submit",
         (e) => {
             e.preventDefault();
-            e.stopImmediatePropagation(); // kill all other listeners
+            e.stopImmediatePropagation();
             e.stopPropagation();
             handleSearchProducts();
-            return false; // extra safety
+            return false;
         },
         { capture: true }
     );
@@ -52,6 +61,19 @@ const attachSearchForm = () => {
         },
         { capture: true }
     );
+
+    // Watch for input changes to show/hide close button
+    searchBarInput?.addEventListener("input", toggleCloseIcon);
+
+    // Handle close icon click to clear input and hide icon
+    searchCloseIcon?.addEventListener("click", () => {
+        searchBarInput.value = "";
+        toggleCloseIcon();
+        searchBarInput.focus();
+    });
+
+    // Initially hide the close icon
+    toggleCloseIcon();
 };
 
 if (document.readyState === "loading") {

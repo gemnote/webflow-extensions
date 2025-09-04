@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const distinctCount = items.length;
         const totalQty = items.reduce((sum, it) => sum + getItemQuantity(it), 0);
 
-        cartTitle.textContent = `Cart (${distinctCount} item${distinctCount !== 1 ? "s" : ""}${totalQty ? ` • ${totalQty} qty` : ""})`;
+        cartTitle.textContent = `Cart (${distinctCount} item${distinctCount !== 1 ? "s" : ""})`;
 
         if (distinctCount === 0) {
             cartEmpty.style.display = "flex";
@@ -203,6 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .map((item, index) => {
                 const name = item?.name ?? "Untitled";
                 const brand = item?.brand_name ?? "";
+                const options = item?.options ?? [];
                 const price = Number(item?.price) || 0;
                 const img = pickImageForItem(item);
                 const qty = getItemQuantity(item);
@@ -216,6 +217,9 @@ document.addEventListener("DOMContentLoaded", function () {
               <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
                 <h3 class="font-editorial item-heading">${name}</h3>
                 ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
+                ${options.map(option, () => {
+                    <h3 className="font-editorial item-heading">${option.name}: ${option.values[0].value}</h3>
+                })}
                 <p class="font-inter item-price">From $${price.toFixed(2)}${qty ? ` • ${qty} qty` : ""}</p>
                 <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
               </div>

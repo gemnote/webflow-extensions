@@ -19,7 +19,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function setCartState(state) {
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(state));
-        } catch {}
+        } catch {
+        }
     }
 
     // Safely pluck items array from your schema
@@ -36,7 +37,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Optionally bump updated_at to now (ISO)
         try {
             state.cart.attributes.updated_at = new Date().toISOString();
-        } catch {}
+        } catch {
+        }
         return state;
     }
 
@@ -68,7 +70,8 @@ document.addEventListener("DOMContentLoaded", function () {
             JSON.parse(val); // ensure valid JSON
             localStorage.setItem(CART_KEY, val);
             document.cookie = "lookbook=; Max-Age=0; path=/"; // expire cookie
-        } catch {}
+        } catch {
+        }
     })();
 
     /************** DOM Mount Points **************/
@@ -208,6 +211,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 const img = pickImageForItem(item);
                 const qty = getItemQuantity(item);
 
+
+                const optionsHtml = options
+                    .map((opt) => {
+                        const valueStr = Array.isArray(opt?.values)
+                            ? opt.values.map((v) => v?.value).filter(Boolean).join(", ")
+                            : "";
+                        if (!valueStr) return "";
+                        return `<p class="font-inter item-option">${opt.name}: ${valueStr}</p>`;
+                    })
+                    .join("");
+
                 return `
           <li class="cart-item px-5" data-index="${index}">
             <div class="list-container gap-4 justify-evenly mt-7">
@@ -217,9 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
               <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
                 <h3 class="font-editorial item-heading">${name}</h3>
                 ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                ${options.map(option, () => {
-                    <h3 className="font-editorial item-heading">${option.name}: ${option.values[0].value}</h3>
-                })}
+                ${optionsHtml}
                 <p class="font-inter item-price">From $${price.toFixed(2)}${qty ? ` • ${qty} qty` : ""}</p>
                 <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
               </div>

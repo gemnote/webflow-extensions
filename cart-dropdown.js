@@ -44,6 +44,21 @@ document.addEventListener("DOMContentLoaded", function () {
               <ul class="cart-items"></ul>
             </div>
             <div class="cart-footer">
+            <a href="https://www.gemnote.com/start-a-project" class="call-for-action w-inline-block">
+                    <div class="code-embed w-embed">
+                        <svg 
+                        width="12" 
+                        height="12" 
+                        viewBox="0 0 12 12" 
+                        class="call-for-action-icon" 
+                        aria-hidden="true" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle cx="6" cy="6" r="6" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <div>view cart</div>
+                </a>
             <a href="https://www.gemnote.com/start-a-project" class="call-for-action-dark w-inline-block">
                     <div class="code-embed w-embed">
                         <svg
@@ -57,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <circle cx="6" cy="6" r="6" fill="currentColor"></circle>
                         </svg>
                     </div>
-                    <div>start a project</div>
+                    <div>go to checkout</div>
                 </a>
             </div>
         `;

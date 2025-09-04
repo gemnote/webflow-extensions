@@ -229,10 +229,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 <img class="object-cover image-container" src="${img}" alt="${name}">
               </div>
               <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
-                <h3 class="font-editorial item-heading">${name}</h3>
+                <h3 class="item-heading">${name}</h3>
                 ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
                 ${optionsHtml}
-                <p class="font-inter item-price">From $${price.toFixed(2)}${qty ? ` • ${qty} qty` : ""}</p>
+                <p class="item-option">Quantity: {qty}</p>
+                <p class="item-option">${price}</p>
                 <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
               </div>
             </div>

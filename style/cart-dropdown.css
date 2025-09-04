@@ -127,11 +127,16 @@
 .list-container {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     align-items: flex-start;
     justify-items: center;
     width: 100%;
 }
-
+.list-sub-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
 .gap-4 {
     gap: 1rem;
 }

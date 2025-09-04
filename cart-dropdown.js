@@ -224,8 +224,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 return `
           <li class="cart-item px-5" data-index="${index}">
-            <div class="list-container gap-4 justify-evenly mt-7">
-              <div>
+            <div class="list-container gap-4 mt-7">
+              <div class="list-sub-container">
                   <div class="image-wrapper">
                     <img class="object-cover image-container" src="${img}" alt="${name}">
                   </div>

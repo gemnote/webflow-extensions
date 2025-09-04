@@ -162,7 +162,6 @@
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    gap: 12px;
 }
 
 .carousel::-webkit-scrollbar {
@@ -170,7 +169,7 @@
 }
 
 .slide {
-    flex: 0 0 100%;
+    flex: 0 0 85%;
     scroll-snap-align: start;
 }
 
@@ -243,7 +242,7 @@
     }
 
     .lookbook-product-card-main {
-        flex: 0 0 100%;
+        flex: 0 0 85%;
         scroll-snap-align: start;
     }
 

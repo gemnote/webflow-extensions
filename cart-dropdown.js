@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
                     ${optionsHtml}
                     <p class="item-option">Quantity: ${qty}</p>
-                    <p class="item-option">${price}</p>
+                    <p class="item-option">$ ${price}</p>
                   </div>
               </div>
               <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>

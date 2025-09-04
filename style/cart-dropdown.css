@@ -127,6 +127,9 @@
 .list-container {
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
+    justify-items: center;
+    width: 100%;
 }
 
 .gap-4 {

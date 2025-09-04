@@ -225,15 +225,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 return `
           <li class="cart-item px-5" data-index="${index}">
             <div class="list-container gap-4 justify-evenly mt-7">
-              <div class="image-wrapper">
-                <img class="object-cover image-container" src="${img}" alt="${name}">
-              </div>
-              <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
-                <h3 class="item-heading">${name}</h3>
-                ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                ${optionsHtml}
-                <p class="item-option">Quantity: ${qty}</p>
-                <p class="item-option">${price}</p>
+              <div>
+                  <div class="image-wrapper">
+                    <img class="object-cover image-container" src="${img}" alt="${name}">
+                  </div>
+                  <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
+                    <h3 class="item-heading">${name}</h3>
+                    ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
+                    ${optionsHtml}
+                    <p class="item-option">Quantity: ${qty}</p>
+                    <p class="item-option">${price}</p>
+                  </div>
               </div>
               <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
             </div>

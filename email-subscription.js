@@ -43,7 +43,7 @@ const submitSubscription = async () => {
 
         // success UI
         show(subscriptionSuccessText);
-        setTimeout(() => hide(subscriptionSuccessText), 300);
+        setTimeout(() => hide(subscriptionSuccessText), 3000);
 
         // optional: clear the field
         emailSubscriptionInput.value = "";

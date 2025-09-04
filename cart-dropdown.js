@@ -218,7 +218,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             ? opt.values.map((v) => v?.value).filter(Boolean).join(", ")
                             : "";
                         if (!valueStr) return "";
-                        return `<p class="font-inter item-option">${opt.name}: ${valueStr}</p>`;
+                        return `<p class="font-inter item-option">${opt.name}: ${valueStr}
+                                <span class="color-swatch" style="background-color: ${opt.values[0].swatch_color}"></span>
+                                </p>`;
                     })
                     .join("");
 

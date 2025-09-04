@@ -18,6 +18,7 @@
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
+    text-transform: capitalize;
     margin: 0;
     line-height: 22px; /* 157.143% */
     letter-spacing: -0.28px;
@@ -27,6 +28,10 @@
     text-decoration-thickness: auto;
     text-underline-offset: auto;
     text-underline-position: from-font;
+}
+
+.item-brand:hover {
+    color: #AAA59B;
 }
 
 @media (max-width: 767px) {
@@ -132,11 +137,13 @@
     justify-items: center;
     width: 100%;
 }
+
 .list-sub-container {
     display: flex;
     flex-direction: row;
     gap: 10px;
 }
+
 .gap-4 {
     gap: 1rem;
 }

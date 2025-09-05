@@ -1,0 +1,133 @@
+/* -----------------------------------------
+   * Global / Resets
+   * --------------------------------------- */
+/* Hide Webflow badge */
+.w-webflow-badge {
+    display: none !important;
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* Normalize container row spacing */
+.w-container .w-row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Scrollbar (WebKit) */
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* -----------------------------------------
+ * Navigation / Dropdowns
+ * --------------------------------------- */
+/* Reveal helper circle on hover / open */
+.nav-menu-left .dropdown-tp .dropdown-toggle:hover .dropdown-circle,
+.nav-menu-left .dropdown-tp .dropdown-toggle.w--open .dropdown-circle,
+.nav-menu-left .nav-link:hover .dropdown-circle,
+.nav-link:hover .dropdown-circle,
+.upper-nav-link:hover .dropdown-circle,
+.dropdown-tp:hover .dropdown-circle {
+    opacity: 1; /* was 32 (invalid). Use 1 for fully visible */
+}
+
+/* Desktop dropdown open-on-hover */
+.dropdown-tp:hover .dropdown-list {
+    display: block;
+}
+
+/* Tabs: active state */
+.case-tabs-menu a[aria-selected="true"] {
+    color: #fff;
+    background-color: #22211f;
+}
+
+/* -----------------------------------------
+ * Forms
+ * --------------------------------------- */
+/* Checkbox / radio label when checked */
+input.w-checkbox-input.p-check:checked + .w-form-label,
+.w-form-formradioinput:checked + .w-form-label {
+    background: #22211f;
+    color: #fff;
+}
+
+/* Pointer cursor for custom checkbox proxy */
+.p-check {
+    cursor: pointer;
+}
+
+/* -----------------------------------------
+ * Media / Sliders
+ * --------------------------------------- */
+/* Ensure collection images scale correctly */
+.curated-slideshow .owl-carousel .owl-item .owl-collection-image {
+    width: auto;
+    max-width: 100%;
+}
+
+/* -----------------------------------------
+ * Responsive
+ * --------------------------------------- */
+
+/* Tablet + below (<= 991px) */
+@media screen and (max-width: 991px) {
+    /* Open dropdown: dark theme for menu items */
+    .dropdown-toggle.w-dropdown-toggle.w--open {
+        background: #22211f;
+        color: #fff;
+    }
+
+    /* Footer dropdown uses transparent background when open */
+    .dropdown-toggle.w-dropdown-toggle.footer-dropdown.w--open {
+        background: transparent;
+    }
+
+    /* Label colors in footer (closed state) */
+    .dropdown-toggle.w-dropdown-toggle.footer-dropdown .label-nav {
+        color: #000;
+        font-family: Editorialnew, sans-serif;
+    }
+
+    /* Footer label while open (kept black per original) */
+    .dropdown-toggle.w-dropdown-toggle.footer-dropdown.w--open .label-nav {
+        color: #000;
+    }
+
+    /* On touch layouts, disable hover-open and rely on Webflow open class */
+    .dropdown-tp:hover .dropdown-list {
+        display: none;
+    }
+
+    .dropdown-tp nav.dropdown-list.w-dropdown-list.w--open {
+        display: block;
+    }
+
+    /* Swap plus/minus icons on open */
+    .dropdown-toggle.w-dropdown-toggle.w--open .icon-block .icon-block-minus {
+        display: block;
+    }
+
+    .dropdown-toggle.w-dropdown-toggle.w--open .icon-block .icon-block-plus {
+        display: none;
+    }
+}
+
+/* Small devices (<= 767px) */
+@media screen and (max-width: 767px) {
+    /* Adjust pseudo-element alignment for headings */
+    .merch-heading-link::before {
+        top: 5px !important;
+        height: 17px !important;
+    }
+}
+
+/* Very large screens (>= 1920px) */
+@media screen and (min-width: 1920px) {
+    /* Nudge open dropdown positioning on ultra-wide */
+    .dropdown-list.w--open {
+        top: 50px !important;
+    }
+}

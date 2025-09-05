@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /************** DOM Mount Points **************/
     const cartBlocks = document.querySelectorAll(".cart-block");
-    const mobileNavMenu = document.querySelector(".mobile-nav-menu"); // Mobile navbar container
+    const mobileNavMenu = document.querySelector(".mobile-cart-block"); // Mobile navbar container
     if (cartBlocks.length === 0) return;
 
     cartBlocks.forEach((cartBlock) => {

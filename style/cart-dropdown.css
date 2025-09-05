@@ -341,3 +341,9 @@
     text-decoration-skip-ink: auto;
     /* Using default thickness/offset for better cross-browser handling */
 }
+
+@media (max-width: 767px) {
+    .remove-button {
+        font-size: 12px;
+    }
+}

@@ -17,8 +17,6 @@ const debounce = (fn, delay) => {
     };
 }
 
-const debouncedHandleSearchProducts = debounce(handleSearchProducts, 500);
-
 const handleSearchProducts = async () => {
     const originalBtnValue = searchSubmitBtn?.value;
     if (searchSubmitBtn) {
@@ -40,6 +38,10 @@ const handleSearchProducts = async () => {
         }
     }
 };
+
+
+const debouncedHandleSearchProducts = debounce(handleSearchProducts, 500);
+
 
 // Show/hide the close icon based on input value
 const toggleCloseIcon = () => {

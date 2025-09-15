@@ -61,7 +61,7 @@ const fetchAndRenderProducts = async () => {
             // Save product id/slug if available
             if (product.id) card.dataset.productId = product.id;
 
-            const imageUrl = product.image_url ?? product.image ?? "";
+            const imageUrl = product.external_image_url ?? "";
             const brandName = product.brand_name ?? "Generic";
             const productName = product.name ?? "";
             const msrp = product.msrp ?? "";

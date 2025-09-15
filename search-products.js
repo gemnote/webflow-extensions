@@ -74,7 +74,7 @@ const attachSearchForm = () => {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 e.stopPropagation();
-                debouncedHandleSearchProducts();
+                handleSearchProducts();
                 return false;
             }
         },
@@ -82,7 +82,10 @@ const attachSearchForm = () => {
     );
 
     // Watch for input changes to show/hide close button
-    searchBarInput?.addEventListener("input", toggleCloseIcon);
+    searchBarInput?.addEventListener("input", () => {
+        toggleCloseIcon();
+        debouncedHandleSearchProducts();
+    });
 
     // Handle close icon click to clear input and hide icon
     searchCloseIcon?.addEventListener("click", () => {

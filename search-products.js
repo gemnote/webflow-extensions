@@ -3,6 +3,19 @@ const searchSubmitBtn = searchForm?.querySelector('input[type="submit"]');
 const searchBarInput = document.getElementById("desktop-navbar-searchbar");
 const searchCloseIcon = document.getElementById("search-bar-close-icon");
 
+
+const debounce = (fn, delay) => {
+    let timeoutId;
+    return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            fn.apply(this, args);
+        }, delay);
+    };
+}
+
+const debouncedHandleSearchProducts = debounce(handleSearchProducts, 500);
+
 const handleSearchProducts = async () => {
     const originalBtnValue = searchSubmitBtn?.value;
     if (searchSubmitBtn) {
@@ -55,7 +68,7 @@ const attachSearchForm = () => {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 e.stopPropagation();
-                handleSearchProducts();
+                debouncedHandleSearchProducts();
                 return false;
             }
         },

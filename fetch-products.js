@@ -31,7 +31,7 @@ const fetchAndRenderProducts = async () => {
             ? collection_name
             : "";
 
-    const endpoint = `https://staging-merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
+    const endpoint = `https://staging-merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}&limit=10`;
 
     try {
         const res = await fetch(endpoint);

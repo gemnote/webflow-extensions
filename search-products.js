@@ -4,6 +4,9 @@ const searchBarInput = document.getElementById("desktop-navbar-searchbar");
 const searchCloseIcon = document.getElementById("search-bar-close-icon");
 
 
+let baseUrl = "https://nuxt.gemnote.com/lookbook?q=";
+
+
 const debounce = (fn, delay) => {
     let timeoutId;
     return function (...args) {
@@ -25,6 +28,7 @@ const handleSearchProducts = async () => {
 
     try {
         console.log(searchBarInput.value);
+        window.location.href = `${baseUrl}${searchBarInput.value}`
         searchBarInput.value = "";
         toggleCloseIcon(); // hide close icon after clearing input
     } catch (err) {

@@ -5,6 +5,7 @@
 // Extract the current URL path segments and get the second-to-last segment
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
+const BASE_URL = 'https://staging-merchos.gemnote.com'
 
 /*************************************
  * Fetch and Render Box Products
@@ -35,7 +36,7 @@ const fetchBoxProducts = async () => {
     const collectionSlug = isValidCollection ? collection_name : '';
 
     // API endpoint for fetching products by collection slug
-    const endpoint = `https://staging-merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
+    const endpoint = `${BASE_URL}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
     try {
         const res = await fetch(endpoint);
@@ -55,7 +56,7 @@ const fetchBoxProducts = async () => {
             block.innerHTML = `
                 <div class="packages-sub">Custom</div>
                 <h2 class="packages-heading">${product.name}</h2>
-                <img src="${product.external_image_url}" loading="lazy" alt="${product.name}" class="packages-image">
+                <img src="${BASE_URL + product.external_image_url}" loading="lazy" alt="${product.name}" class="packages-image">
                 <div style="display: none;" class="price-block">${product.msrp}</div>
                 <p class="packages-pera">${product.description || ""}</p>
                 <a href="#" class="packages-button w-button">add to favorites</a>

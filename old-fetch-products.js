@@ -5,6 +5,7 @@
 // Extract current URL segments and determine second-to-last segment
 const siteUrl = window.location.pathname.split("/").filter(Boolean);
 const subUrl = siteUrl[siteUrl.length - 2];
+const BASE_URL = 'https://staging-merchos.gemnote.com'
 
 /*************************************
  * Fetch and Render Products
@@ -35,7 +36,7 @@ const fetchAndRenderProducts = async () => {
     const collectionSlug = isValidCollection ? collection_name : '';
 
     // API endpoint to fetch products
-    const endpoint = `https://staging-merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
+    const endpoint = `${BASE_URL}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
     try {
         const res = await fetch(endpoint);
@@ -61,7 +62,7 @@ const fetchAndRenderProducts = async () => {
             item.setAttribute("role", "listitem");
 
             item.innerHTML = `
-                <img src="${product.external_image_url}" loading="lazy" alt="${product.name}" class="product-img">
+                <img src="${BASE_URL + product.managed_image_url}" loading="lazy" alt="${product.name}" class="product-img">
                 <div class="price-wrap-block">
                   <div class="price-wrap">
                     <div class="price-block">from $</div>

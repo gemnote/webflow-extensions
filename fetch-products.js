@@ -3,6 +3,8 @@
  *************************************/
 const siteUrl = window.location.pathname.split("/").filter(Boolean);
 const subUrl = siteUrl[siteUrl.length - 2];
+const BASE_URL = 'https://staging-merchos.gemnote.com'
+
 
 /*************************************
  * Fetch and Render Products (render using lookbook classes)
@@ -31,7 +33,7 @@ const fetchAndRenderProducts = async () => {
             ? collection_name
             : "";
 
-    const endpoint = `https://staging-merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}&limit=10`;
+    const endpoint = `${BASE_URL}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}&limit=10`;
 
     try {
         const res = await fetch(endpoint);
@@ -61,7 +63,7 @@ const fetchAndRenderProducts = async () => {
             // Save product id/slug if available
             if (product.id) card.dataset.productId = product.id;
 
-            const imageUrl = product.external_image_url ?? "";
+            const imageUrl = BASE_URL + product.managed_image_url ?? "";
             const brandName = product.brand_name ?? "Generic";
             const productName = product.name ?? "";
             const msrp = product.msrp ?? "";

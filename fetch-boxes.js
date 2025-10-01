@@ -5,7 +5,7 @@
 // Extract the current URL path segments and get the second-to-last segment
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
-const BASE_URL = 'https://staging-merchos.gemnote.com'
+// const BASE_URL = 'https://staging-merchos.gemnote.com'
 
 /*************************************
  * Fetch and Render Box Products

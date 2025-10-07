@@ -156,18 +156,6 @@
     gap: 6px;
 }
 
-
-.carousel {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-}
-
-.carousel::-webkit-scrollbar {
-    display: none;
-}
-
 /* Breakpoints */
 @media (max-width: 1024px) {
     .lookbook-product-grid-main {
@@ -248,8 +236,19 @@
         border-top: none;
     }
 
+    .carousel {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+    }
+
+    .carousel::-webkit-scrollbar {
+        display: none;
+    }
+
     .slide {
-    flex: 0 0 85%;
-    scroll-snap-align: start;
-}
+        flex: 0 0 85%;
+        scroll-snap-align: start;
+    }
 }

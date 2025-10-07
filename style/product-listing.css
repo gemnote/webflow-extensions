@@ -168,11 +168,6 @@
     display: none;
 }
 
-.slide {
-    flex: 0 0 85%;
-    scroll-snap-align: start;
-}
-
 /* Breakpoints */
 @media (max-width: 1024px) {
     .lookbook-product-grid-main {
@@ -252,4 +247,9 @@
         border-right: none;
         border-top: none;
     }
+
+    .slide {
+    flex: 0 0 85%;
+    scroll-snap-align: start;
+}
 }

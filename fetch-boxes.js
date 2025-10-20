@@ -55,8 +55,8 @@ const fetchBoxProducts = async () => {
             block.innerHTML = `
                 <div class="packages-sub">Custom</div>
                 <h2 class="packages-heading">${product.name}</h2>
-                <img src="${product.image_url}" loading="lazy" alt="${product.name}" class="packages-image">
-                <div style="display: none;" class="price-block">${product.msrp}</div>
+                <img src="${product.thumbnail_url}" loading="lazy" alt="${product.name}" class="packages-image">
+                <div style="display: none;" class="price-block">${product.price}</div>
                 <p class="packages-pera">${product.description || ""}</p>
                 <a href="#" class="packages-button w-button">add to favorites</a>
             `;

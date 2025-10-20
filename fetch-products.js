@@ -61,10 +61,10 @@ const fetchAndRenderProducts = async () => {
             // Save product id/slug if available
             if (product.id) card.dataset.productId = product.id;
 
-            const imageUrl = product.image_url ?? product.image ?? "";
-            const brandName = product.brand_name ?? "Generic";
+            const imageUrl = product.thumbnail_url ?? product.preferred_image_url ?? "";
+            const brandName = product.brand.name ?? "Generic";
             const productName = product.name ?? "";
-            const msrp = product.msrp ?? "";
+            const msrp = product.price ?? "";
 
             card.innerHTML = `
         <!-- Image with hover zoom -->

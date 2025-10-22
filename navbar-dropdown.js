@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
                           <h3 class="font-editorial item-heading">${item.text}</h3>
-                          <p class="font-inter item-price">From $${item.price.toFixed(2)}</p>
+                          <p class="font-inter item-price">From $${parseFloat(item.price).toFixed(2)}</p>
                           <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
                         </div>
                       </div>

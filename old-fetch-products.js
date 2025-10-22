@@ -62,7 +62,7 @@ const fetchAndRenderProducts = async () => {
             item.setAttribute("role", "listitem");
 
             item.innerHTML = `
-                <img src="${BASE_URL + product.thumbnail_url}" loading="lazy" alt="${product.name}" class="product-img">
+                <img src="${product.thumbnail_url}" loading="lazy" alt="${product.name}" class="product-img">
                 <div class="price-wrap-block">
                   <div class="price-wrap">
                     <div class="price-block">from $</div>

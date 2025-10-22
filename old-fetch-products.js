@@ -5,7 +5,7 @@
 // Extract current URL segments and determine second-to-last segment
 const siteUrl = window.location.pathname.split("/").filter(Boolean);
 const subUrl = siteUrl[siteUrl.length - 2];
-const BASE_URL = 'https://staging-merchos.gemnote.com'
+const BASE_URL = 'https://merchos.gemnote.com'
 
 /*************************************
  * Fetch and Render Products
@@ -62,16 +62,16 @@ const fetchAndRenderProducts = async () => {
             item.setAttribute("role", "listitem");
 
             item.innerHTML = `
-                <img src="${BASE_URL + product.managed_image_url}" loading="lazy" alt="${product.name}" class="product-img">
+                <img src="${BASE_URL + product.thumbnail_url}" loading="lazy" alt="${product.name}" class="product-img">
                 <div class="price-wrap-block">
                   <div class="price-wrap">
                     <div class="price-block">from $</div>
-                    <div class="price-block">${product.msrp}</div>
+                    <div class="price-block">${product.price}</div>
                     <div class="price-block">USD</div>
                   </div>
                   <div class="unit-text">Min. 15 units</div>
                 </div>
-                <h2 class="product-heading">${product.brand_name ?? ''} ${product.name}</h2>
+                <h2 class="product-heading">${product.brand.name ?? ''} ${product.name}</h2>
                 <a href="#" class="add-button w-button">add to favorites</a>
             `;
 

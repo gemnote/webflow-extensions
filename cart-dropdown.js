@@ -205,20 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const options = item?.selected_color ?? [];
                 const price = Number(item?.variants.price) || 0;
                 const img = item.images.manifest[0].thumb;
-                const qty = getItemQuantity(item);
-
-
-                const optionsHtml = options
-                    .map((opt) => {
-                        const valueStr = Array.isArray(opt?.values)
-                            ? opt.values.map((v) => v?.value).filter(Boolean).join(", ")
-                            : "";
-                        if (!valueStr) return "";
-                        return `<p class="font-inter item-option">Color: ${opt.value}
-                                <span class="color-swatch" style="background-color: ${opt.color_code}"></span>
-                                </p>`;
-                    })
-                    .join("");
+                const qty = item.options.quantity;
 
                 return `
           <li class="cart-item px-5" data-index="${index}">
@@ -230,7 +217,9 @@ document.addEventListener("DOMContentLoaded", function () {
                   <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
                     <h3 class="item-heading">${name}</h3>
                     ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                    ${optionsHtml}
+                    <p class="font-inter item-option">Color: ${options.value}
+                        <span class="color-swatch" style="background-color: ${options.color_code}"></span>
+                    </p>
                     <p class="item-option">Quantity: ${qty}</p>
                     <p class="item-option">$
                         <strong>

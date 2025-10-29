@@ -179,10 +179,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const cartEmpty = cartDropdown.querySelector(".cart-empty");
         const cartListSection = cartDropdown.querySelector(".cart-list");
         const cartFooter = cartDropdown.querySelector(".cart-footer");
+        const cartCounter = document.getElementById('cart-counter')
 
         // Distinct items + total quantity
         const distinctCount = items.length;
-        const totalQty = items.reduce((sum, it) => sum + getItemQuantity(it), 0);
+        cartCounter.innerText = distinctCount.toString() || '0';
 
         cartTitle.textContent = `Cart (${distinctCount} item${distinctCount !== 1 ? "s" : ""})`;
 

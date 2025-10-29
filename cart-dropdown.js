@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const name = item?.name ?? "Untitled";
                 const brand = item?.brand_name ?? "";
                 const options = item?.selected_color ?? [];
-                const price = Number(item?.variants.price) || 0;
+                const price = Number(item.unit_price) || 0;
                 const img = item.images.manifest[0].srcs.thumb;
                 const qty = item.quantity;
 

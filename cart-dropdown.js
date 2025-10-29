@@ -204,8 +204,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const brand = item?.brand_name ?? "";
                 const options = item?.selected_color ?? [];
                 const price = Number(item?.variants.price) || 0;
-                const img = item.images.manifest[0].thumb;
-                const qty = item.options.quantity;
+                const img = item.images.manifest[0].srcs.thumb;
+                const qty = item.quantity;
 
                 return `
           <li class="cart-item px-5" data-index="${index}">

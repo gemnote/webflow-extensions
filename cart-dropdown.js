@@ -5,12 +5,43 @@
  * Record key: "cart"
  * Value: localCartItems (ARRAY of items)
  ***********************************************/
-document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  // Boot no matter when this loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  function boot() {
+    document.querySelectorAll(".cart-block").forEach(initCartForBlock);
+
+    // Observe late-added triggers (SPA/Vue/Webflow)
+    const mo = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        m.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.matches?.(".cart-block")) initCartForBlock(node);
+          node.querySelectorAll?.(".cart-block").forEach(initCartForBlock);
+        });
+      });
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Delegation fallback: init on first click if added late
+    document.addEventListener("click", (e) => {
+      const trigger = e.target.closest?.(".cart-block");
+      if (!trigger || trigger.__cartInit) return;
+      initCartForBlock(trigger);
+      trigger.click();
+    });
+  }
+
+  /************** IndexedDB Helpers **************/
   const DB_NAME = "gemnote-marketplace";
   const STORE_NAME = "pinia";
   const RECORD_KEY = "cart";
 
-  /************** IndexedDB Helpers **************/
   function openDB() {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, 1);
@@ -25,19 +56,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // ✅ Ensures we resolve to the fn(store) VALUE, not a pending Promise
   async function withStore(mode, fn) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
-      const out = fn(store);
-      tx.oncomplete = () => resolve(out);
+      let value;
+      Promise.resolve()
+        .then(() => fn(store))
+        .then((v) => { value = v; })
+        .catch((err) => { try { tx.abort(); } catch {} reject(err); });
+      tx.oncomplete = () => resolve(value);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
   }
 
-  // Returns the value we should render against (localCartItems array if present)
+  // Read localCartItems (array) or legacy shapes
   async function getCartState() {
     try {
       const record = await withStore("readonly", (store) => {
@@ -47,11 +83,10 @@ document.addEventListener("DOMContentLoaded", function () {
           getReq.onerror = () => reject(getReq.error);
         });
       });
-      // Prefer the modern structure: { key: "cart", localCartItems: [...] }
-      if (record?.localCartItems) return record.localCartItems;
-      // Fallback: sometimes entire array was stored directly as value
-      if (Array.isArray(record)) return record;
-      // Legacy fallback: old nested schema
+      if (!record) return null;
+      if (record.localCartItems) return record.localCartItems; // modern
+      if (Array.isArray(record)) return record;                 // direct array dump
+      // legacy nested
       return record?.cart?.attributes?.cart_details_json?.product_details?.items ?? null;
     } catch {
       return null;
@@ -73,11 +108,8 @@ document.addEventListener("DOMContentLoaded", function () {
   /************** Shape Helpers **************/
   function getItemsFromState(state) {
     if (!state) return [];
-    // If state is already the array (from modern structure), use it
-    if (Array.isArray(state)) return state;
-    // If it’s an object with localCartItems
-    if (Array.isArray(state.localCartItems)) return state.localCartItems;
-    // Legacy fallback
+    if (Array.isArray(state)) return state; // modern array
+    if (Array.isArray(state?.localCartItems)) return state.localCartItems;
     return state?.cart?.attributes?.cart_details_json?.product_details?.items ?? [];
   }
 
@@ -89,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getItemColor(item) {
-    // Could be item.selected_color or variants/option_values.Color
     const sc = item?.selected_color;
     if (sc && (sc.value || sc.color_code)) return { value: sc.value || "", color_code: sc.color_code || "" };
     const color = item?.option_values?.Color;
@@ -98,37 +129,20 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getItemImage(item) {
-    // Prefer images.manifest[0].srcs.thumb like your data
     const m = item?.images?.manifest;
-    if (Array.isArray(m) && m.length > 0) {
+    if (Array.isArray(m) && m.length) {
       return m[0]?.srcs?.thumb || m[0]?.srcs?.medium || m[0]?.srcs?.large || "";
     }
-    return "";
+    return item?.manifest?.[0]?.thumb || item?.image || "";
   }
 
-  function getItemPrice(item) {
-    const p = item?.unit_price ?? item?.price;
-    const n = Number(p);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  /************** DOM Mount Points **************/
-  const cartBlocks = document.querySelectorAll(".cart-block");
-  const mobileNavMenu = document.querySelector(".mobile-cart-block");
-  if (cartBlocks.length === 0) return;
-
-  cartBlocks.forEach((cartBlock) => {
-    // Ensure the anchor parent can position the dropdown correctly
-    if (!cartBlock.classList.contains("cart-block-wrapper")) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "cart-block-wrapper";
-      wrapper.style.position = "relative";
-      cartBlock.parentNode.insertBefore(wrapper, cartBlock);
-      wrapper.appendChild(cartBlock);
-    }
+  /************** UI **************/
+  function initCartForBlock(cartBlock) {
+    if (cartBlock.__cartInit) return;
+    cartBlock.__cartInit = true;
 
     const cartDropdown = document.createElement("div");
-    cartDropdown.classList.add("cart-dropdown");
+    cartDropdown.className = "cart-dropdown";
     cartDropdown.style.display = "none";
     cartDropdown.innerHTML = `
       <div class="cart-header px-5">
@@ -172,23 +186,38 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     `;
 
-    // Attach dropdown right under the wrapper (which is relative)
-    const wrapper = cartBlock.parentElement;
-    wrapper.appendChild(cartDropdown);
+    // === Anchor selection ===
+    // Mobile: prefer .mobile-cart-block; Desktop: header/nav/site header; Fallback: offsetParent/parent/body
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    const mobileAnchor = document.querySelector(".mobile-cart-block") || cartBlock.closest(".mobile-cart-block");
+    const desktopAnchor = cartBlock.closest("header, nav, .navbar, .site-header, .cart-anchor") || cartBlock.offsetParent;
+    const anchor = (isMobile && mobileAnchor) || desktopAnchor || cartBlock.parentNode || document.body;
 
-    /************** Toggle & Events **************/
+    // Ensure positioned ancestor for absolute children
+    if (anchor instanceof HTMLElement && getComputedStyle(anchor).position === "static") {
+      anchor.style.position = "relative";
+    }
+
+    // Append dropdown to the chosen anchor (NOT to a tiny wrapper)
+    anchor.appendChild(cartDropdown);
+
+    // Toggle
     cartBlock.addEventListener("click", async function (event) {
+      // Prevent navigation if the trigger is an <a>
+      if (event.target.closest("a")) event.preventDefault();
       event.stopPropagation();
-      if (mobileNavMenu) mobileNavMenu.style.display = "none";
+
       closeOtherDropdowns(cartDropdown);
-      cartDropdown.style.display = cartDropdown.style.display === "flex" ? "none" : "flex";
+      cartDropdown.style.display = (cartDropdown.style.display === "none") ? "flex" : "none";
       await updateCartUI(cartDropdown);
     });
 
+    // Close button
     cartDropdown.querySelector(".close-dropdown").addEventListener("click", function () {
       cartDropdown.style.display = "none";
     });
 
+    // Click-away close
     document.addEventListener("click", function (event) {
       if (!cartBlock.contains(event.target) && !cartDropdown.contains(event.target)) {
         cartDropdown.style.display = "none";
@@ -196,8 +225,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Initial paint
-    updateCartUI(cartDropdown);
-  });
+    updateCartUI(cartDropdown).catch(()=>{});
+  }
 
   function closeOtherDropdowns(currentDropdown) {
     document.querySelectorAll(".cart-dropdown").forEach((dd) => {
@@ -205,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  /************** UI Render **************/
+  /************** Render **************/
   async function updateCartUI(cartDropdown) {
     const state = await getCartState();
     const items = getItemsFromState(state);
@@ -233,74 +262,50 @@ document.addEventListener("DOMContentLoaded", function () {
     cartListSection.style.display = "block";
     cartFooter.style.display = "flex";
 
-    cartList.innerHTML = items
-      .map((item, index) => {
-        const name = item?.name || item?.product_name || "Untitled";
-        const brand = item?.brand_name || "";
-        const { value: colorName, color_code } = getItemColor(item);
-        const price = item?.unit_price;
-        const img = getItemImage(item);
-        const qty = item?.quantity;
+    cartList.innerHTML = items.map((item, index) => {
+      const name = item?.name || item?.product_name || "Untitled";
+      const brand = item?.brand_name || "";
+      const { value: colorName, color_code } = getItemColor(item);
+      const price = item?.unit_price ?? item?.price ?? 0;
+      const img = getItemImage(item);
+      const qty = getItemQuantity(item);
 
-        return `
-          <li class="cart-item px-5" data-index="${index}">
-            <div class="list-container gap-4 mt-7">
-              <div class="list-sub-container">
-                <div class="image-wrapper">
-                  <img class="object-cover image-container" src="${img}" alt="${name}">
-                </div>
-                <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
-                  <h3 class="item-heading">${name}</h3>
-                  ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                  <p class="font-inter item-option">Color: ${colorName || ""}
-                    <span class="color-swatch" style="background-color:${color_code || "transparent"}"></span>
-                  </p>
-                  <p class="item-option">Quantity: ${qty}</p>
-                  <p class="item-option">$ <strong>${price}</strong></p>
-                </div>
+      return `
+        <li class="cart-item px-5" data-index="${index}">
+          <div class="list-container gap-4 mt-7">
+            <div class="list-sub-container">
+              <div class="image-wrapper">
+                <img class="object-cover image-container" src="${img}" alt="${name}">
               </div>
-              <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
+              <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
+                <h3 class="item-heading">${name}</h3>
+                ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
+                <p class="font-inter item-option">Color: ${colorName || ""}
+                  <span class="color-swatch" style="background-color:${color_code || "transparent"}"></span>
+                </p>
+                <p class="item-option">Quantity: ${qty}</p>
+                <p class="item-option">$ <strong>${Number(price) || 0}</strong></p>
+              </div>
             </div>
-          </li>
-        `;
-      })
-      .join("");
+            <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
+          </div>
+        </li>
+      `;
+    }).join("");
 
     // bind removes
     cartDropdown.querySelectorAll(".remove-button").forEach((btn) => {
       btn.addEventListener("click", async function (event) {
         event.stopPropagation();
-        await removeFromCart(parseInt(this.dataset.index, 10), cartDropdown);
+        const idx = parseInt(this.dataset.index, 10);
+        const current = await getCartState();
+        const currentItems = getItemsFromState(current);
+        if (!Array.isArray(currentItems) || !currentItems[idx]) return;
+
+        const next = currentItems.slice(0, idx).concat(currentItems.slice(idx + 1));
+        await setCartState(next);
+        await updateCartUI(cartDropdown);
       });
     });
   }
-
-  /************** Remove **************/
-  async function removeFromCart(index, cartDropdown) {
-    const state = await getCartState();
-    const items = getItemsFromState(state);
-    if (!Array.isArray(items) || !items[index]) return;
-
-    // create new array and persist
-    const next = items.slice();
-    next.splice(index, 1);
-    await setCartState(next);
-    await updateCartUI(cartDropdown);
-
-    if (typeof updateButtonStyles === "function") updateButtonStyles();
-    if (typeof refreshButtonStyles === "function") refreshButtonStyles();
-  }
-
-  // Debug helper you can paste in console to inspect current record
-  window.__dumpPiniaCart = function () {
-    indexedDB.open("gemnote-marketplace", 1).onsuccess = (e) => {
-      const db = e.target.result;
-      const tx = db.transaction("pinia", "readonly");
-      tx.objectStore("pinia").get("cart").onsuccess = ({ target }) => {
-        console.log("cart record:", target.result);
-        console.log("localCartItems:", target.result?.localCartItems);
-        console.log("first derived item:", Array.isArray(target.result?.localCartItems) ? target.result.localCartItems[0] : null);
-      };
-    };
-  };
-});
+})();

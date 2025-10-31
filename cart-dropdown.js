@@ -1,40 +1,16 @@
-(function () {
-  // Boot now or on DOMContentLoaded
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
-
-  function boot() {
-    document.querySelectorAll(".cart-block").forEach(initCartForBlock);
-
-    // Observe late-added triggers (SPA/Vue/Webflow)
-    const mo = new MutationObserver((muts) => {
-      muts.forEach((m) => {
-        m.addedNodes.forEach((node) => {
-          if (!(node instanceof HTMLElement)) return;
-          if (node.matches?.(".cart-block")) initCartForBlock(node);
-          node.querySelectorAll?.(".cart-block").forEach(initCartForBlock);
-        });
-      });
-    });
-    mo.observe(document.documentElement, { childList: true, subtree: true });
-
-    // Delegation fallback
-    document.addEventListener("click", (e) => {
-      const trigger = e.target.closest?.(".cart-block");
-      if (!trigger || trigger.__cartInit) return;
-      initCartForBlock(trigger);
-      trigger.click();
-    });
-  }
-
-  /************ IndexedDB helpers ************/
+/***********************************************
+ * Cart Dropdown (IndexedDB)
+ * DB: gemnote-marketplace
+ * Store: pinia (keyPath: "key")
+ * Record key: "cart"
+ * Value: localCartItems (ARRAY of items)
+ ***********************************************/
+document.addEventListener("DOMContentLoaded", function () {
   const DB_NAME = "gemnote-marketplace";
   const STORE_NAME = "pinia";
   const RECORD_KEY = "cart";
 
+  /************** IndexedDB Helpers **************/
   function openDB() {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, 1);
@@ -49,51 +25,44 @@
     });
   }
 
-  // ✅ FIXED: resolves to the inner value returned by fn(store), not the Promise itself
   async function withStore(mode, fn) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
-      let value;
-      // capture the result of fn(store) once fulfilled
-      Promise.resolve()
-        .then(() => fn(store))
-        .then((v) => { value = v; })
-        .catch((err) => { try { tx.abort(); } catch {} reject(err); });
-      tx.oncomplete = () => resolve(value);
+      const out = fn(store);
+      tx.oncomplete = () => resolve(out);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
   }
 
-  // Supports both {localCartItems: state} and direct dump on the cart record
+  // Returns the value we should render against (localCartItems array if present)
   async function getCartState() {
     try {
       const record = await withStore("readonly", (store) => {
         return new Promise((resolve, reject) => {
-          const req = store.get(RECORD_KEY);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => reject(req.error);
+          const getReq = store.get(RECORD_KEY);
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => reject(getReq.error);
         });
       });
-      if (!record) return null;
-      if (record.localCartItems) return record.localCartItems;
-
-      // fallback: treat remaining fields (except key) as the dump
-      const clone = { ...record };
-      delete clone.key;
-      return Object.keys(clone).length ? clone : null;
+      // Prefer the modern structure: { key: "cart", localCartItems: [...] }
+      if (record?.localCartItems) return record.localCartItems;
+      // Fallback: sometimes entire array was stored directly as value
+      if (Array.isArray(record)) return record;
+      // Legacy fallback: old nested schema
+      return record?.cart?.attributes?.cart_details_json?.product_details?.items ?? null;
     } catch {
       return null;
     }
   }
 
-  async function setCartState(state) {
+  async function setCartState(nextItemsArray) {
     try {
       await withStore("readwrite", (store) => {
         return new Promise((resolve, reject) => {
-          const putReq = store.put({ key: RECORD_KEY, localCartItems: state });
+          const putReq = store.put({ key: RECORD_KEY, localCartItems: nextItemsArray });
           putReq.onsuccess = () => resolve(true);
           putReq.onerror = () => reject(putReq.error);
         });
@@ -101,38 +70,15 @@
     } catch {}
   }
 
-  // Optional cookie → IDB migration
-  (async function migrateLookbookCookieOnce() {
-    try {
-      const existing = await getCartState();
-      if (existing) return;
-      const c = document.cookie.split("; ").find((r) => r.startsWith("lookbook="));
-      if (!c) return;
-      const val = decodeURIComponent(c.split("=")[1]);
-      try {
-        const parsed = JSON.parse(val);
-        await setCartState(parsed);
-        document.cookie = "lookbook=; Max-Age=0; path=/";
-      } catch {}
-    } catch {}
-  })();
-
-  /************ State helpers ************/
+  /************** Shape Helpers **************/
   function getItemsFromState(state) {
+    if (!state) return [];
+    // If state is already the array (from modern structure), use it
+    if (Array.isArray(state)) return state;
+    // If it’s an object with localCartItems
+    if (Array.isArray(state.localCartItems)) return state.localCartItems;
+    // Legacy fallback
     return state?.cart?.attributes?.cart_details_json?.product_details?.items ?? [];
-  }
-
-  function setItemsInState(state, newItems) {
-    if (!state?.cart?.attributes?.cart_details_json?.product_details) return state;
-    state.cart.attributes.cart_details_json.product_details.items = newItems;
-    try {
-      state.cart.attributes.updated_at = new Date().toISOString();
-    } catch {}
-    return state;
-  }
-
-  function pickImageForItem(item) {
-    return item?.manifest?.[0]?.thumb;
   }
 
   function getItemQuantity(item) {
@@ -142,13 +88,47 @@
     return Number(item?.quantity) || 0;
   }
 
-  /************ UI wiring ************/
-  function initCartForBlock(cartBlock) {
-    if (!cartBlock || cartBlock.__cartInit) return;
-    cartBlock.__cartInit = true;
+  function getItemColor(item) {
+    // Could be item.selected_color or variants/option_values.Color
+    const sc = item?.selected_color;
+    if (sc && (sc.value || sc.color_code)) return { value: sc.value || "", color_code: sc.color_code || "" };
+    const color = item?.option_values?.Color;
+    if (color && (color.value || color.color_code)) return { value: color.value || "", color_code: color.color_code || "" };
+    return { value: "", color_code: "" };
+  }
+
+  function getItemImage(item) {
+    // Prefer images.manifest[0].srcs.thumb like your data
+    const m = item?.images?.manifest;
+    if (Array.isArray(m) && m.length > 0) {
+      return m[0]?.srcs?.thumb || m[0]?.srcs?.medium || m[0]?.srcs?.large || "";
+    }
+    return "";
+  }
+
+  function getItemPrice(item) {
+    const p = item?.unit_price ?? item?.price;
+    const n = Number(p);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  /************** DOM Mount Points **************/
+  const cartBlocks = document.querySelectorAll(".cart-block");
+  const mobileNavMenu = document.querySelector(".mobile-cart-block");
+  if (cartBlocks.length === 0) return;
+
+  cartBlocks.forEach((cartBlock) => {
+    // Ensure the anchor parent can position the dropdown correctly
+    if (!cartBlock.classList.contains("cart-block-wrapper")) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "cart-block-wrapper";
+      wrapper.style.position = "relative";
+      cartBlock.parentNode.insertBefore(wrapper, cartBlock);
+      wrapper.appendChild(cartBlock);
+    }
 
     const cartDropdown = document.createElement("div");
-    cartDropdown.className = "cart-dropdown";
+    cartDropdown.classList.add("cart-dropdown");
     cartDropdown.style.display = "none";
     cartDropdown.innerHTML = `
       <div class="cart-header px-5">
@@ -192,56 +172,40 @@
       </div>
     `;
 
-    // Anchor selection (desktop vs mobile)
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    const mobileAnchor =
-      document.querySelector(".mobile-cart-block") ||
-      cartBlock.closest(".mobile-cart-block");
-    const desktopAnchor =
-      cartBlock.closest("header, nav, .navbar, .site-header, .cart-anchor") ||
-      cartBlock.offsetParent;
-    const anchor =
-      (isMobile && mobileAnchor) || desktopAnchor || cartBlock.parentNode || document.body;
+    // Attach dropdown right under the wrapper (which is relative)
+    const wrapper = cartBlock.parentElement;
+    wrapper.appendChild(cartDropdown);
 
-    if (anchor instanceof HTMLElement && getComputedStyle(anchor).position === "static") {
-      anchor.style.position = "relative";
-    }
-
-    anchor.appendChild(cartDropdown);
-
-    // Toggle
-    cartBlock.addEventListener("click", async function (e) {
-      if (e.target.closest("a")) e.preventDefault();
-      e.stopPropagation();
-
+    /************** Toggle & Events **************/
+    cartBlock.addEventListener("click", async function (event) {
+      event.stopPropagation();
+      if (mobileNavMenu) mobileNavMenu.style.display = "none";
       closeOtherDropdowns(cartDropdown);
-      cartDropdown.style.display = (cartDropdown.style.display === "none") ? "flex" : "none";
+      cartDropdown.style.display = cartDropdown.style.display === "flex" ? "none" : "flex";
       await updateCartUI(cartDropdown);
     });
 
-    // Close button
     cartDropdown.querySelector(".close-dropdown").addEventListener("click", function () {
       cartDropdown.style.display = "none";
     });
 
-    // Click-away close
     document.addEventListener("click", function (event) {
       if (!cartBlock.contains(event.target) && !cartDropdown.contains(event.target)) {
         cartDropdown.style.display = "none";
       }
     });
 
-    // Initial render
-    updateCartUI(cartDropdown).catch(()=>{});
-  }
+    // Initial paint
+    updateCartUI(cartDropdown);
+  });
 
   function closeOtherDropdowns(currentDropdown) {
-    document.querySelectorAll(".cart-dropdown").forEach((dropdown) => {
-      if (dropdown !== currentDropdown) dropdown.style.display = "none";
+    document.querySelectorAll(".cart-dropdown").forEach((dd) => {
+      if (dd !== currentDropdown) dd.style.display = "none";
     });
   }
 
-  /************ Render Cart UI ************/
+  /************** UI Render **************/
   async function updateCartUI(cartDropdown) {
     const state = await getCartState();
     const items = getItemsFromState(state);
@@ -254,10 +218,10 @@
     const cartCounter = document.getElementById("cart-counter");
 
     const distinctCount = items.length;
-    if (cartCounter) cartCounter.innerText = distinctCount.toString() || "0";
+    if (cartCounter) cartCounter.innerText = String(distinctCount || 0);
     cartTitle.textContent = `Cart (${distinctCount} item${distinctCount !== 1 ? "s" : ""})`;
 
-    if (distinctCount === 0) {
+    if (!distinctCount) {
       cartEmpty.style.display = "flex";
       cartListSection.style.display = "none";
       cartFooter.style.display = "none";
@@ -269,50 +233,74 @@
     cartListSection.style.display = "block";
     cartFooter.style.display = "flex";
 
-    cartList.innerHTML = items.map((item, index) => {
-      const name = item?.name ?? "Untitled";
-      const brand = item?.brand_name ?? "";
-      const options = item?.selected_color ?? {};
-      const price = Number(item?.unit_price) || 0;
-      const img = item?.images?.manifest?.[0]?.srcs?.thumb || pickImageForItem(item) || "";
-      const qty = getItemQuantity(item);
+    cartList.innerHTML = items
+      .map((item, index) => {
+        const name = item?.name || item?.product_name || "Untitled";
+        const brand = item?.brand_name || "";
+        const { value: colorName, color_code } = getItemColor(item);
+        const price = getItemPrice(item);
+        const img = getItemImage(item);
+        const qty = getItemQuantity(item);
 
-      return `
-        <li class="cart-item px-5" data-index="${index}">
-          <div class="list-container gap-4 mt-7">
-            <div class="list-sub-container">
-              <div class="image-wrapper">
-                <img class="object-cover image-container" src="${img}" alt="${name}">
+        return `
+          <li class="cart-item px-5" data-index="${index}">
+            <div class="list-container gap-4 mt-7">
+              <div class="list-sub-container">
+                <div class="image-wrapper">
+                  <img class="object-cover image-container" src="${img}" alt="${name}">
+                </div>
+                <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
+                  <h3 class="item-heading">${name}</h3>
+                  ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
+                  <p class="font-inter item-option">Color: ${colorName || ""}
+                    <span class="color-swatch" style="background-color:${color_code || "transparent"}"></span>
+                  </p>
+                  <p class="item-option">Quantity: ${qty}</p>
+                  <p class="item-option">$ <strong>${price}</strong></p>
+                </div>
               </div>
-              <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
-                <h3 class="item-heading">${name}</h3>
-                ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                <p class="font-inter item-option">Color: ${options.value ?? "" }
-                  <span class="color-swatch" style="background-color: ${options.color_code ?? "transparent"}"></span>
-                </p>
-                <p class="item-option">Quantity: ${qty}</p>
-                <p class="item-option">$ <strong>${price}</strong></p>
-              </div>
+              <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
             </div>
-            <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
-          </div>
-        </li>
-      `;
-    }).join("");
+          </li>
+        `;
+      })
+      .join("");
 
-    // Bind remove buttons
+    // bind removes
     cartDropdown.querySelectorAll(".remove-button").forEach((btn) => {
       btn.addEventListener("click", async function (event) {
         event.stopPropagation();
-        const idx = parseInt(this.dataset.index, 10);
-        const current = await getCartState();
-        if (!current) return;
-        const existing = getItemsFromState(current);
-        if (!Array.isArray(existing)) return;
-        const updated = setItemsInState(current, existing.filter((_, i) => i !== idx));
-        await setCartState(updated);
-        await updateCartUI(cartDropdown);
+        await removeFromCart(parseInt(this.dataset.index, 10), cartDropdown);
       });
     });
   }
-})();
+
+  /************** Remove **************/
+  async function removeFromCart(index, cartDropdown) {
+    const state = await getCartState();
+    const items = getItemsFromState(state);
+    if (!Array.isArray(items) || !items[index]) return;
+
+    // create new array and persist
+    const next = items.slice();
+    next.splice(index, 1);
+    await setCartState(next);
+    await updateCartUI(cartDropdown);
+
+    if (typeof updateButtonStyles === "function") updateButtonStyles();
+    if (typeof refreshButtonStyles === "function") refreshButtonStyles();
+  }
+
+  // Debug helper you can paste in console to inspect current record
+  window.__dumpPiniaCart = function () {
+    indexedDB.open("gemnote-marketplace", 1).onsuccess = (e) => {
+      const db = e.target.result;
+      const tx = db.transaction("pinia", "readonly");
+      tx.objectStore("pinia").get("cart").onsuccess = ({ target }) => {
+        console.log("cart record:", target.result);
+        console.log("localCartItems:", target.result?.localCartItems);
+        console.log("first derived item:", Array.isArray(target.result?.localCartItems) ? target.result.localCartItems[0] : null);
+      };
+    };
+  };
+});

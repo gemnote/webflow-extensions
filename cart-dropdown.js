@@ -238,9 +238,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const name = item?.name || item?.product_name || "Untitled";
         const brand = item?.brand_name || "";
         const { value: colorName, color_code } = getItemColor(item);
-        const price = getItemPrice(item);
+        const price = item?.unit_price;
         const img = getItemImage(item);
-        const qty = item?.unit_price;
+        const qty = item?.quantity;
 
         return `
           <li class="cart-item px-5" data-index="${index}">

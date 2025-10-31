@@ -1,5 +1,5 @@
 (function () {
-  // Boot no matter when this is loaded
+  // Boot now or on DOMContentLoaded
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
@@ -49,19 +49,25 @@
     });
   }
 
+  // ✅ FIXED: resolves to the inner value returned by fn(store), not the Promise itself
   async function withStore(mode, fn) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
-      const out = fn(store);
-      tx.oncomplete = () => resolve(out);
+      let value;
+      // capture the result of fn(store) once fulfilled
+      Promise.resolve()
+        .then(() => fn(store))
+        .then((v) => { value = v; })
+        .catch((err) => { try { tx.abort(); } catch {} reject(err); });
+      tx.oncomplete = () => resolve(value);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
   }
 
-  // Supports both { key:'cart', localCartItems: state } and a direct dump on the cart record
+  // Supports both {localCartItems: state} and direct dump on the cart record
   async function getCartState() {
     try {
       const record = await withStore("readonly", (store) => {
@@ -74,6 +80,7 @@
       if (!record) return null;
       if (record.localCartItems) return record.localCartItems;
 
+      // fallback: treat remaining fields (except key) as the dump
       const clone = { ...record };
       delete clone.key;
       return Object.keys(clone).length ? clone : null;
@@ -140,7 +147,6 @@
     if (!cartBlock || cartBlock.__cartInit) return;
     cartBlock.__cartInit = true;
 
-    // Build dropdown (your CSS controls layout/position)
     const cartDropdown = document.createElement("div");
     cartDropdown.className = "cart-dropdown";
     cartDropdown.style.display = "none";
@@ -186,26 +192,17 @@
       </div>
     `;
 
-    // Choose the correct anchor:
-    // - On mobile (<=767px): prefer .mobile-cart-block
-    // - Else: prefer header/nav/site header
-    // - Fallbacks: offsetParent, parentNode
+    // Anchor selection (desktop vs mobile)
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
-
     const mobileAnchor =
       document.querySelector(".mobile-cart-block") ||
       cartBlock.closest(".mobile-cart-block");
-
     const desktopAnchor =
       cartBlock.closest("header, nav, .navbar, .site-header, .cart-anchor") ||
       cartBlock.offsetParent;
-
     const anchor =
-      (isMobile && mobileAnchor) ||
-      desktopAnchor ||
-      cartBlock.parentNode;
+      (isMobile && mobileAnchor) || desktopAnchor || cartBlock.parentNode || document.body;
 
-    // Make sure the anchor is a containing block for position:absolute children
     if (anchor instanceof HTMLElement && getComputedStyle(anchor).position === "static") {
       anchor.style.position = "relative";
     }
@@ -234,7 +231,7 @@
       }
     });
 
-    // Initial content render
+    // Initial render
     updateCartUI(cartDropdown).catch(()=>{});
   }
 
@@ -273,7 +270,6 @@
     cartFooter.style.display = "flex";
 
     cartList.innerHTML = items.map((item, index) => {
-      console.log(item)
       const name = item?.name ?? "Untitled";
       const brand = item?.brand_name ?? "";
       const options = item?.selected_color ?? {};

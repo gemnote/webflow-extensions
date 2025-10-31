@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const { value: colorName, color_code } = getItemColor(item);
         const price = getItemPrice(item);
         const img = getItemImage(item);
-        const qty = getItemQuantity(item);
+        const qty = item?.unit_price;
 
         return `
           <li class="cart-item px-5" data-index="${index}">

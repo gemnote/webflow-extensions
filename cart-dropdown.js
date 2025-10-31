@@ -1,18 +1,40 @@
-<script>
-/***********************************************
- * Cart Dropdown Initialization on Page Load
- * - Now uses IndexedDB:
- *   DB: gemnote-marketplace
- *   Store: pinia (keyPath: "key")
- *   Record key: "cart"
- *   Value field: localCartItems  (your original state)
- ***********************************************/
-document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  // Boot no matter when this is loaded
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  function boot() {
+    document.querySelectorAll(".cart-block").forEach(initCartForBlock);
+
+    // Observe late-added triggers (SPA/Vue/Webflow)
+    const mo = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        m.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.matches?.(".cart-block")) initCartForBlock(node);
+          node.querySelectorAll?.(".cart-block").forEach(initCartForBlock);
+        });
+      });
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Delegation fallback
+    document.addEventListener("click", (e) => {
+      const trigger = e.target.closest?.(".cart-block");
+      if (!trigger || trigger.__cartInit) return;
+      initCartForBlock(trigger);
+      trigger.click();
+    });
+  }
+
+  /************ IndexedDB helpers ************/
   const DB_NAME = "gemnote-marketplace";
   const STORE_NAME = "pinia";
   const RECORD_KEY = "cart";
 
-  /************** IndexedDB Helpers **************/
   function openDB() {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, 1);
@@ -32,31 +54,34 @@ document.addEventListener("DOMContentLoaded", function () {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
-      const result = fn(store);
-      tx.oncomplete = () => resolve(result);
+      const out = fn(store);
+      tx.oncomplete = () => resolve(out);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
   }
 
-  // Read the whole record; we return just the localCartItems for compatibility
+  // Supports both { key:'cart', localCartItems: state } and a direct dump on the cart record
   async function getCartState() {
     try {
       const record = await withStore("readonly", (store) => {
         return new Promise((resolve, reject) => {
-          const getReq = store.get(RECORD_KEY);
-          getReq.onsuccess = () => resolve(getReq.result || null);
-          getReq.onerror = () => reject(getReq.error);
+          const req = store.get(RECORD_KEY);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
         });
       });
-      // record shape is { key: "cart", localCartItems: <your previous state object> }
-      return record?.localCartItems ?? null;
+      if (!record) return null;
+      if (record.localCartItems) return record.localCartItems;
+
+      const clone = { ...record };
+      delete clone.key;
+      return Object.keys(clone).length ? clone : null;
     } catch {
       return null;
     }
   }
 
-  // Persist your state under { key: "cart", localCartItems: state }
   async function setCartState(state) {
     try {
       await withStore("readwrite", (store) => {
@@ -66,12 +91,10 @@ document.addEventListener("DOMContentLoaded", function () {
           putReq.onerror = () => reject(putReq.error);
         });
       });
-    } catch {
-      // swallow
-    }
+    } catch {}
   }
 
-  // OPTIONAL one-time migration from old "lookbook" cookie -> IndexedDB "pinia/cart"
+  // Optional cookie → IDB migration
   (async function migrateLookbookCookieOnce() {
     try {
       const existing = await getCartState();
@@ -80,40 +103,31 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!c) return;
       const val = decodeURIComponent(c.split("=")[1]);
       try {
-        const parsed = JSON.parse(val); // ensure valid JSON
+        const parsed = JSON.parse(val);
         await setCartState(parsed);
-        document.cookie = "lookbook=; Max-Age=0; path=/"; // expire cookie
-      } catch {
-        // ignore invalid cookie
-      }
+        document.cookie = "lookbook=; Max-Age=0; path=/";
+      } catch {}
     } catch {}
   })();
 
-  /************** State helpers (unchanged API) **************/
-  // Safely pluck items array from your schema
+  /************ State helpers ************/
   function getItemsFromState(state) {
-    return (
-      state?.cart?.attributes?.cart_details_json?.product_details?.items ?? []
-    );
+    return state?.cart?.attributes?.cart_details_json?.product_details?.items ?? [];
   }
 
-  // Safely write items array back into your schema
   function setItemsInState(state, newItems) {
     if (!state?.cart?.attributes?.cart_details_json?.product_details) return state;
     state.cart.attributes.cart_details_json.product_details.items = newItems;
-    // Optionally bump updated_at to now (ISO)
     try {
       state.cart.attributes.updated_at = new Date().toISOString();
     } catch {}
     return state;
   }
 
-  // Choose best image
   function pickImageForItem(item) {
-    return item?.manifest?.[0].thumb;
+    return item?.manifest?.[0]?.thumb;
   }
 
-  // Total quantity for an item (sum size_qty if present)
   function getItemQuantity(item) {
     if (Array.isArray(item?.size_qty)) {
       return item.size_qty.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
@@ -121,17 +135,15 @@ document.addEventListener("DOMContentLoaded", function () {
     return Number(item?.quantity) || 0;
   }
 
-  /************** DOM Mount Points **************/
-  const cartBlocks = document.querySelectorAll(".cart-block");
-  const mobileNavMenu = document.querySelector(".mobile-cart-block"); // Mobile navbar container
-  if (cartBlocks.length === 0) return;
+  /************ UI wiring ************/
+  function initCartForBlock(cartBlock) {
+    if (!cartBlock || cartBlock.__cartInit) return;
+    cartBlock.__cartInit = true;
 
-  cartBlocks.forEach((cartBlock) => {
-    /***********************************************
-     * Create and Insert Cart Dropdown
-     ***********************************************/
+    // Build dropdown (your CSS controls layout/position)
     const cartDropdown = document.createElement("div");
-    cartDropdown.classList.add("cart-dropdown");
+    cartDropdown.className = "cart-dropdown";
+    cartDropdown.style.display = "none";
     cartDropdown.innerHTML = `
       <div class="cart-header px-5">
         <h3 class="cart-title">Cart (0 items)</h3>
@@ -174,53 +186,65 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     `;
 
-    // Insert dropdown appropriately based on device (mobile or desktop)
-    if (mobileNavMenu && mobileNavMenu.contains(cartBlock)) {
-      mobileNavMenu.parentNode.insertBefore(cartDropdown, mobileNavMenu.nextSibling);
-      cartDropdown.classList.add("mobile-cart-dropdown");
-    } else {
-      cartBlock.parentNode.appendChild(cartDropdown);
+    // Choose the correct anchor:
+    // - On mobile (<=767px): prefer .mobile-cart-block
+    // - Else: prefer header/nav/site header
+    // - Fallbacks: offsetParent, parentNode
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+    const mobileAnchor =
+      document.querySelector(".mobile-cart-block") ||
+      cartBlock.closest(".mobile-cart-block");
+
+    const desktopAnchor =
+      cartBlock.closest("header, nav, .navbar, .site-header, .cart-anchor") ||
+      cartBlock.offsetParent;
+
+    const anchor =
+      (isMobile && mobileAnchor) ||
+      desktopAnchor ||
+      cartBlock.parentNode;
+
+    // Make sure the anchor is a containing block for position:absolute children
+    if (anchor instanceof HTMLElement && getComputedStyle(anchor).position === "static") {
+      anchor.style.position = "relative";
     }
 
-    cartDropdown.style.display = "none";
+    anchor.appendChild(cartDropdown);
 
-    /***********************************************
-     * Dropdown Toggle & Event Bindings
-     ***********************************************/
-    cartBlock.addEventListener("click", async function (event) {
-      event.stopPropagation();
-      if (mobileNavMenu) mobileNavMenu.style.display = "none"; // Hide mobile menu if open
+    // Toggle
+    cartBlock.addEventListener("click", async function (e) {
+      if (e.target.closest("a")) e.preventDefault();
+      e.stopPropagation();
+
       closeOtherDropdowns(cartDropdown);
-      cartDropdown.style.display = cartDropdown.style.display === "flex" ? "none" : "flex";
+      cartDropdown.style.display = (cartDropdown.style.display === "none") ? "flex" : "none";
       await updateCartUI(cartDropdown);
     });
 
+    // Close button
     cartDropdown.querySelector(".close-dropdown").addEventListener("click", function () {
       cartDropdown.style.display = "none";
     });
 
+    // Click-away close
     document.addEventListener("click", function (event) {
       if (!cartBlock.contains(event.target) && !cartDropdown.contains(event.target)) {
         cartDropdown.style.display = "none";
       }
     });
 
-    // Initialize dropdown with saved cart items
-    updateCartUI(cartDropdown);
-  });
+    // Initial content render
+    updateCartUI(cartDropdown).catch(()=>{});
+  }
 
-  /***********************************************
-   * Close All Other Cart Dropdowns
-   ***********************************************/
   function closeOtherDropdowns(currentDropdown) {
     document.querySelectorAll(".cart-dropdown").forEach((dropdown) => {
       if (dropdown !== currentDropdown) dropdown.style.display = "none";
     });
   }
 
-  /***********************************************
-   * Render Cart UI from IndexedDB (pinia/cart)
-   ***********************************************/
+  /************ Render Cart UI ************/
   async function updateCartUI(cartDropdown) {
     const state = await getCartState();
     const items = getItemsFromState(state);
@@ -230,10 +254,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const cartEmpty = cartDropdown.querySelector(".cart-empty");
     const cartListSection = cartDropdown.querySelector(".cart-list");
     const cartFooter = cartDropdown.querySelector(".cart-footer");
-    const cartCounter = document.getElementById('cart-counter');
+    const cartCounter = document.getElementById("cart-counter");
 
     const distinctCount = items.length;
-    if (cartCounter) cartCounter.innerText = distinctCount.toString() || '0';
+    if (cartCounter) cartCounter.innerText = distinctCount.toString() || "0";
     cartTitle.textContent = `Cart (${distinctCount} item${distinctCount !== 1 ? "s" : ""})`;
 
     if (distinctCount === 0) {
@@ -248,65 +272,51 @@ document.addEventListener("DOMContentLoaded", function () {
     cartListSection.style.display = "block";
     cartFooter.style.display = "flex";
 
-    cartList.innerHTML = items
-      .map((item, index) => {
-        const name = item?.name ?? "Untitled";
-        const brand = item?.brand_name ?? "";
-        const options = item?.selected_color ?? [];
-        const price = Number(item.unit_price) || 0;
-        const img = item?.images?.manifest?.[0]?.srcs?.thumb || "";
-        const qty = item?.quantity ?? 0;
+    cartList.innerHTML = items.map((item, index) => {
+      console.log(item)
+      const name = item?.name ?? "Untitled";
+      const brand = item?.brand_name ?? "";
+      const options = item?.selected_color ?? {};
+      const price = Number(item?.unit_price) || 0;
+      const img = item?.images?.manifest?.[0]?.srcs?.thumb || pickImageForItem(item) || "";
+      const qty = getItemQuantity(item);
 
-        return `
-          <li class="cart-item px-5" data-index="${index}">
-            <div class="list-container gap-4 mt-7">
-              <div class="list-sub-container">
-                  <div class="image-wrapper">
-                    <img class="object-cover image-container" src="${img}" alt="${name}">
-                  </div>
-                  <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
-                    <h3 class="item-heading">${name}</h3>
-                    ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
-                    <p class="font-inter item-option">Color: ${options.value ?? "" }
-                        <span class="color-swatch" style="background-color: ${options.color_code ?? "transparent"}"></span>
-                    </p>
-                    <p class="item-option">Quantity: ${qty}</p>
-                    <p class="item-option">$ <strong>${price}</strong></p>
-                  </div>
+      return `
+        <li class="cart-item px-5" data-index="${index}">
+          <div class="list-container gap-4 mt-7">
+            <div class="list-sub-container">
+              <div class="image-wrapper">
+                <img class="object-cover image-container" src="${img}" alt="${name}">
               </div>
-              <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
+              <div class="flex flex-col justify-evenly lg:gap-[3px] gap-[2px]">
+                <h3 class="item-heading">${name}</h3>
+                ${brand ? `<p class="font-inter item-brand">${brand}</p>` : ""}
+                <p class="font-inter item-option">Color: ${options.value ?? "" }
+                  <span class="color-swatch" style="background-color: ${options.color_code ?? "transparent"}"></span>
+                </p>
+                <p class="item-option">Quantity: ${qty}</p>
+                <p class="item-option">$ <strong>${price}</strong></p>
+              </div>
             </div>
-          </li>
-        `;
-      })
-      .join("");
+            <p class="font-inter remove-button cursor-pointer" data-index="${index}">remove</p>
+          </div>
+        </li>
+      `;
+    }).join("");
 
-    // Bind remove events
+    // Bind remove buttons
     cartDropdown.querySelectorAll(".remove-button").forEach((btn) => {
       btn.addEventListener("click", async function (event) {
         event.stopPropagation();
-        await removeFromCart(parseInt(this.dataset.index, 10), cartDropdown);
+        const idx = parseInt(this.dataset.index, 10);
+        const current = await getCartState();
+        if (!current) return;
+        const existing = getItemsFromState(current);
+        if (!Array.isArray(existing)) return;
+        const updated = setItemsInState(current, existing.filter((_, i) => i !== idx));
+        await setCartState(updated);
+        await updateCartUI(cartDropdown);
       });
     });
   }
-
-  /***********************************************
-   * Remove Item from Cart and Update UI (IndexedDB)
-   ***********************************************/
-  async function removeFromCart(index, cartDropdown) {
-    const state = await getCartState();
-    if (!state) return;
-
-    const items = getItemsFromState(state);
-    if (!Array.isArray(items) || !items[index]) return;
-
-    items.splice(index, 1);
-    await setCartState(setItemsInState(state, items));
-    await updateCartUI(cartDropdown);
-
-    // optional UI sync hooks if they exist elsewhere
-    if (typeof updateButtonStyles === "function") updateButtonStyles();
-    if (typeof refreshButtonStyles === "function") refreshButtonStyles();
-  }
-});
-</script>
+})();

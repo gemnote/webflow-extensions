@@ -37,6 +37,8 @@
             initCartForBlock(trigger);
             trigger.click();
         });
+        window.gnRefreshCartCounter = updateCartCounter;
+
     }
 
 
@@ -134,7 +136,8 @@
             if (record.localCartItems) return record.localCartItems; // modern
             if (Array.isArray(record)) return record;                 // direct array dump
             // legacy nested
-            return record?.cart?.attributes?.cart_details_json?.product_details?.items ?? null;
+            console.log(record?.localCartItems);
+            return record?.localCartItems ?? null;
         } catch {
             return null;
         }
@@ -158,7 +161,8 @@
         if (!state) return [];
         if (Array.isArray(state)) return state; // modern array
         if (Array.isArray(state?.localCartItems)) return state.localCartItems;
-        return state?.cart?.attributes?.cart_details_json?.product_details?.items ?? [];
+        console.log(state?.localCartItems);
+        return state?.localCartItems ?? [];
     }
 
     function getItemQuantity(item) {

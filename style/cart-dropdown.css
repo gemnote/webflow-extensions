@@ -245,8 +245,8 @@ h3,p {
     background: #f5f2ee;
     box-sizing: border-box;
     display: flex;
+    gap: 1rem;
     justify-content: start;
-    padding: 24px;
     width: 100%;
 }
 

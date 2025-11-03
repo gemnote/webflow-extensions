@@ -14,7 +14,7 @@
     }
 
     function boot() {
-        updateCartCounter().catch(() => {});
+        ensureCartCounterSync();
 
         document.querySelectorAll(".cart-block").forEach(initCartForBlock);
 
@@ -28,7 +28,7 @@
                 });
             });
         });
-        mo.observe(document.documentElement, { childList: true, subtree: true });
+        mo.observe(document.documentElement, {childList: true, subtree: true});
 
         // Delegation fallback: init on first click if added late
         document.addEventListener("click", (e) => {
@@ -41,14 +41,40 @@
 
 
     /************** Counter Helper **************/
+    function ensureCartCounterSync() {
+        // Try immediately, then on next frame, then when window fully loads
+        updateCartCounter().catch(() => {
+        });
+        requestAnimationFrame(() => updateCartCounter().catch(() => {
+        }));
+        window.addEventListener("load", () => updateCartCounter().catch(() => {
+        }));
+
+        // If the element doesn't exist yet, watch until it does (once)
+        if (!document.getElementById("cart-counter")) {
+            const once = new MutationObserver(() => {
+                const el = document.getElementById("cart-counter");
+                if (el) {
+                    updateCartCounter().catch(() => {
+                    });
+                    once.disconnect();
+                }
+            });
+            once.observe(document.documentElement, {childList: true, subtree: true});
+        }
+    }
+
     async function updateCartCounter() {
         try {
+            const el = document.getElementById("cart-counter");
+            if (!el) return; // element not in DOM yet; ensureCartCounterSync will catch it later
             const state = await getCartState();
             const items = getItemsFromState(state);
-            const cartCounter = document.getElementById("cart-counter");
-            if (cartCounter) cartCounter.innerText = String(items.length || 0);
-        } catch {}
+            el.innerText = String(items.length || 0);
+        } catch {
+        }
     }
+
 
     /************** IndexedDB Helpers **************/
     const DB_NAME = "gemnote-marketplace";
@@ -61,7 +87,7 @@
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME, { keyPath: "key" });
+                    db.createObjectStore(STORE_NAME, {keyPath: "key"});
                 }
             };
             req.onsuccess = () => resolve(req.result);
@@ -78,8 +104,16 @@
             let value;
             Promise.resolve()
                 .then(() => fn(store))
-                .then((v) => { value = v; })
-                .catch((err) => { try { tx.abort(); } catch {} reject(err); });
+                .then((v) => {
+                    value = v;
+                })
+                .catch((err) => {
+                    try {
+                        tx.abort();
+                    } catch {
+                    }
+                    reject(err);
+                });
             tx.oncomplete = () => resolve(value);
             tx.onerror = () => reject(tx.error);
             tx.onabort = () => reject(tx.error);
@@ -110,12 +144,13 @@
         try {
             await withStore("readwrite", (store) => {
                 return new Promise((resolve, reject) => {
-                    const putReq = store.put({ key: RECORD_KEY, localCartItems: nextItemsArray });
+                    const putReq = store.put({key: RECORD_KEY, localCartItems: nextItemsArray});
                     putReq.onsuccess = () => resolve(true);
                     putReq.onerror = () => reject(putReq.error);
                 });
             });
-        } catch {}
+        } catch {
+        }
     }
 
     /************** Shape Helpers **************/
@@ -135,10 +170,13 @@
 
     function getItemColor(item) {
         const sc = item?.selected_color;
-        if (sc && (sc.value || sc.color_code)) return { value: sc.value || "", color_code: sc.color_code || "" };
+        if (sc && (sc.value || sc.color_code)) return {value: sc.value || "", color_code: sc.color_code || ""};
         const color = item?.option_values?.Color;
-        if (color && (color.value || color.color_code)) return { value: color.value || "", color_code: color.color_code || "" };
-        return { value: "", color_code: "" };
+        if (color && (color.value || color.color_code)) return {
+            value: color.value || "",
+            color_code: color.color_code || ""
+        };
+        return {value: "", color_code: ""};
     }
 
     function getItemImage(item) {
@@ -238,7 +276,8 @@
         });
 
         // Initial paint
-        updateCartUI(cartDropdown).catch(()=>{});
+        updateCartUI(cartDropdown).catch(() => {
+        });
     }
 
     function closeOtherDropdowns(currentDropdown) {
@@ -278,7 +317,7 @@
         cartList.innerHTML = items.map((item, index) => {
             const name = item?.name || item?.product_name || "Untitled";
             const brand = item?.brand_name || "";
-            const { value: colorName, color_code } = getItemColor(item);
+            const {value: colorName, color_code} = getItemColor(item);
             const price = item?.unit_price ?? item?.price ?? 0;
             const img = getItemImage(item);
             const qty = getItemQuantity(item);

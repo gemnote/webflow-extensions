@@ -37,12 +37,12 @@ h3,p {
 
 .cart-dropdown ul {
     list-style: none;
-    padding: 10px;
+    padding: 0px;
     margin: 0;
 }
 
 .cart-dropdown ul li {
-    padding: 8px 10px;
+    padding: 0;
     border-bottom: 1px solid #ddd;
 }
 
@@ -66,8 +66,8 @@ h3,p {
 }
 
 .cart-px-5 {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .cart-empty {
@@ -203,6 +203,8 @@ h3,p {
     font-size: 13px;
     font-style: normal;
     font-family: Inter, Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: -.24px;
 }
 
 .cart-item-heading {
@@ -233,10 +235,6 @@ h3,p {
     color: var(--Black-40, #999);
     font-size: 15px;
     letter-spacing: -.4px;
-}
-
-.cart-font-inter {
-    font-family: Inter, Arial, sans-serif;
 }
 
 .cart-cursor-pointer {

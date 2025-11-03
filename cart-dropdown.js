@@ -14,6 +14,8 @@
     }
 
     function boot() {
+        updateCartCounter().catch(() => {});
+
         document.querySelectorAll(".cart-block").forEach(initCartForBlock);
 
         // Observe late-added triggers (SPA/Vue/Webflow)
@@ -35,6 +37,17 @@
             initCartForBlock(trigger);
             trigger.click();
         });
+    }
+
+
+    /************** Counter Helper **************/
+    async function updateCartCounter() {
+        try {
+            const state = await getCartState();
+            const items = getItemsFromState(state);
+            const cartCounter = document.getElementById("cart-counter");
+            if (cartCounter) cartCounter.innerText = String(items.length || 0);
+        } catch {}
     }
 
     /************** IndexedDB Helpers **************/
@@ -304,6 +317,7 @@
 
                 const next = currentItems.slice(0, idx).concat(currentItems.slice(idx + 1));
                 await setCartState(next);
+                await updateCartCounter();
                 await updateCartUI(cartDropdown);
             });
         });

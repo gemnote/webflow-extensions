@@ -1,23 +1,26 @@
 const searchForm = document.getElementById("email-form");
 const searchSubmitBtn = searchForm?.querySelector('input[type="submit"]');
-const searchBarInput = document.getElementById("desktop-navbar-searchbar");
+const searchInputs = [
+    document.getElementById("desktop-navbar-searchbar"),
+    document.getElementById("mobile-navbar-searchbar")
+].filter(Boolean); // filters out nulls if one doesn't exist
+
 const searchCloseIcon = document.getElementById("search-bar-close-icon");
 
-
 let baseUrl = "https://nuxt.gemnote.com/lookbook?q=";
-
 
 const debounce = (fn, delay) => {
     let timeoutId;
     return function (...args) {
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            fn.apply(this, args);
-        }, delay);
+        timeoutId = setTimeout(() => fn.apply(this, args), delay);
     };
-}
+};
 
-const handleSearchProducts = async () => {
+const handleSearchProducts = async (inputEl) => {
+    const query = inputEl?.value?.trim();
+    if (!query) return;
+
     const originalBtnValue = searchSubmitBtn?.value;
     if (searchSubmitBtn) {
         searchSubmitBtn.value = "Searching...";
@@ -25,12 +28,11 @@ const handleSearchProducts = async () => {
     }
 
     try {
-        console.log(searchBarInput.value);
-        window.location.href = `${baseUrl}${searchBarInput.value}`
-        searchBarInput.value = "";
-        toggleCloseIcon(); // hide close icon after clearing input
+        window.location.href = `${baseUrl}${encodeURIComponent(query)}`;
+        inputEl.value = "";
+        toggleCloseIcon(inputEl);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     } finally {
         if (searchSubmitBtn) {
             searchSubmitBtn.disabled = false;
@@ -39,63 +41,46 @@ const handleSearchProducts = async () => {
     }
 };
 
-
 const debouncedHandleSearchProducts = debounce(handleSearchProducts, 500);
 
-
-// Show/hide the close icon based on input value
-const toggleCloseIcon = () => {
+const toggleCloseIcon = (inputEl) => {
     if (!searchCloseIcon) return;
-    searchCloseIcon.style.display = searchBarInput.value.trim() ? "block" : "none";
+    searchCloseIcon.style.display = inputEl.value.trim() ? "block" : "none";
 };
 
-// Attach form logic
 const attachSearchForm = () => {
-    if (!searchForm) return;
+    if (!searchForm || searchInputs.length === 0) return;
 
-    // Stop form submission completely
-    searchForm.addEventListener(
-        "submit",
-        (e) => {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            e.stopPropagation();
-            handleSearchProducts();
-            return false;
-        },
-        { capture: true }
-    );
-
-    // Stop Enter key default behavior separately
-    searchBarInput?.addEventListener(
-        "keydown",
-        (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                e.stopPropagation();
-                handleSearchProducts();
-                return false;
-            }
-        },
-        { capture: true }
-    );
-
-    // Watch for input changes to show/hide close button
-    searchBarInput?.addEventListener("input", () => {
-        toggleCloseIcon();
-        debouncedHandleSearchProducts();
+    searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInputs.forEach((inputEl) => handleSearchProducts(inputEl));
     });
 
-    // Handle close icon click to clear input and hide icon
+    searchInputs.forEach((inputEl) => {
+        inputEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSearchProducts(inputEl);
+            }
+        });
+
+        inputEl.addEventListener("input", () => {
+            toggleCloseIcon(inputEl);
+            debouncedHandleSearchProducts(inputEl);
+        });
+    });
+
     searchCloseIcon?.addEventListener("click", () => {
-        searchBarInput.value = "";
-        toggleCloseIcon();
-        searchBarInput.focus();
+        searchInputs.forEach((inputEl) => {
+            inputEl.value = "";
+            toggleCloseIcon(inputEl);
+        });
     });
 
     // Initially hide the close icon
-    toggleCloseIcon();
+    searchInputs.forEach((inputEl) => toggleCloseIcon(inputEl));
 };
 
 if (document.readyState === "loading") {

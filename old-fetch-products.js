@@ -8,6 +8,66 @@ const subUrl = siteUrl[siteUrl.length - 2];
 const BASE_URL = 'https://merchos.gemnote.com'
 
 /*************************************
+ * Inject Structured Data (JSON-LD) for SEO
+ *************************************/
+
+// Generate ItemList schema so Google Search Console can properly read
+// product pricing data from client-side rendered products
+function injectProductListSchema(products, collectionSlug) {
+    // Remove existing schema if re-rendering
+    const existing = document.getElementById('product-list-schema');
+    if (existing) existing.remove();
+
+    if (!Array.isArray(products) || products.length === 0) return;
+
+    const schema = {
+        "@context": "https://schema.org/",
+        "@type": "ItemList",
+        "name": collectionSlug
+            ? collectionSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+            : "Products",
+        "itemListElement": products.map((product, index) => {
+            const brandName = product.brand?.name ?? "Gemnote";
+            const productName = product.name ?? "";
+            const imageUrl = product.preferred_image_url ?? product.thumbnail_url ?? "";
+            const price = product.price ? String(product.price) : null;
+
+            const item = {
+                "@type": "Product",
+                "name": `${brandName} ${productName}`.trim(),
+                "image": imageUrl,
+                "brand": {
+                    "@type": "Brand",
+                    "name": brandName
+                }
+            };
+
+            // Only add offers if we have a price
+            if (price) {
+                item.offers = {
+                    "@type": "AggregateOffer",
+                    "lowPrice": price,
+                    "priceCurrency": "USD",
+                    "availability": "https://schema.org/InStock"
+                };
+            }
+
+            return {
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": item
+            };
+        })
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'product-list-schema';
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+}
+
+/*************************************
  * Fetch and Render Products
  *************************************/
 
@@ -55,8 +115,11 @@ const fetchAndRenderProducts = async () => {
         const list = document.createElement("div");
         list.className = "homeproduct-list w-dyn-items w-row";
 
+        // Ensure data.results exists (fallback to empty array)
+        const items = Array.isArray(data.results) ? data.results : [];
+
         // Generate each product item and append to the list
-        data.results.forEach(product => {
+        items.forEach(product => {
             const item = document.createElement("div");
             item.className = "home-product-item w-dyn-item w-col w-col-3";
             item.setAttribute("role", "listitem");
@@ -82,6 +145,9 @@ const fetchAndRenderProducts = async () => {
         listWrapper.appendChild(list);
         wrapper.appendChild(listWrapper);
         productsRoot.appendChild(wrapper);
+
+        // Inject SEO structured data
+        injectProductListSchema(items, collectionSlug);
 
         return document.querySelectorAll('.home-product-item');
     } catch (err) {

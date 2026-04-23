@@ -4,6 +4,66 @@
 const siteUrl = window.location.pathname.split("/").filter(Boolean);
 const subUrl = siteUrl[siteUrl.length - 2];
 
+
+/*************************************
+ * Inject Structured Data (JSON-LD) for SEO
+ *************************************/
+function injectProductListSchema(products, collectionSlug) {
+    // Remove existing schema if re-rendering
+    const existing = document.getElementById('product-list-schema');
+    if (existing) existing.remove();
+
+    if (!Array.isArray(products) || products.length === 0) return;
+
+    const schema = {
+        "@context": "https://schema.org/",
+        "@type": "ItemList",
+        "name": collectionSlug
+            ? collectionSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+            : "Products",
+        "itemListElement": products.map((product, index) => {
+            const brandName = product.brand?.name ?? "Gemnote";
+            const productName = product.name ?? "";
+            const imageUrl = product.preferred_image_url ?? product.thumbnail_url ?? "";
+            const price = product.price ? String(product.price) : null;
+
+            const item = {
+                "@type": "Product",
+                "name": `${brandName} ${productName}`.trim(),
+                "image": imageUrl,
+                "brand": {
+                    "@type": "Brand",
+                    "name": brandName
+                }
+            };
+
+            // Only add offers if we have a price — prevents the exact error you're seeing
+            if (price) {
+                item.offers = {
+                    "@type": "AggregateOffer",
+                    "lowPrice": price,
+                    "priceCurrency": "USD",
+                    "availability": "https://schema.org/InStock"
+                };
+            }
+
+            return {
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": item
+            };
+        })
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'product-list-schema';
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+}
+
+
+
 /*************************************
  * Fetch and Render Products (render using lookbook classes)
  *************************************/
@@ -102,6 +162,9 @@ const fetchAndRenderProducts = async () => {
         });
 
         productsRoot.appendChild(grid);
+
+        // Inject SEO structured data
+        injectProductListSchema(items, collectionSlug);
 
         // Return NodeList of created cards
         return document.querySelectorAll(".lookbook-product-card-main");

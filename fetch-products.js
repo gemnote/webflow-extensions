@@ -47,6 +47,14 @@
         writeWishlistItems(items);
     }
 
+    function updateWishlistCounters() {
+        const count = readWishlistItems().length;
+        const desktop = document.getElementById("wishlist-counter");
+        const mobile = document.getElementById("mobile-wishlist-counter");
+        if (desktop) desktop.textContent = String(count);
+        if (mobile) mobile.textContent = String(count);
+    }
+
     /*************************************
      * Inject Structured Data (JSON-LD) for SEO
      *************************************/
@@ -135,6 +143,7 @@
                 ev.stopPropagation();
                 toggleProductInWishlist(product);
                 updateCardFavoriteIcon(card, product.id);
+                updateWishlistCounters();
             });
         }
 
@@ -166,7 +175,7 @@
                 collection_name = "homepage";
                 break;
             default:
-                collection_name =  "homepage";
+                collection_name = "homepage";
         }
 
         const collectionSlug =
@@ -261,6 +270,9 @@
     /*************************************
      * Initialize
      *************************************/
+    updateWishlistCounters();
+    window.addEventListener("pageshow", updateWishlistCounters);
+
     if (subUrl !== "products-packaging") {
         fetchAndRenderProducts();
     }

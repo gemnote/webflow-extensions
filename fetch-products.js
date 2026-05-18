@@ -166,11 +166,11 @@
                 collection_name = "homepage";
                 break;
             default:
-                collection_name = lastSegment || "homepage";
+                collection_name =  "homepage";
         }
 
         const collectionSlug =
-            typeof collection_name === "string" && collection_name.trim() !== ""
+            collection_name.trim() !== ""
                 ? collection_name
                 : "";
 

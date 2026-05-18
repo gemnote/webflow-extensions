@@ -3,11 +3,151 @@
  *************************************/
 const siteUrl = window.location.pathname.split("/").filter(Boolean);
 const subUrl = siteUrl[siteUrl.length - 2];
-const BASE_URL = 'https://staging-merchos.gemnote.com'
-
 
 /*************************************
- * Fetch and Render Products (render using lookbook classes)
+ * Constants
+ *************************************/
+const LOOKBOOK_URL = "https://merchos.gemnote.com/products/";
+// Mirrors Pinia persist key in frontend/src/stores/wishlist.js
+const WISHLIST_STORAGE_KEY = "merch-wishlist";
+
+/*************************************
+ * Wishlist helpers (mirror Vue/Pinia store shape)
+ * localStorage shape: { "wishlistItems": [...fullProductObjects] }
+ * Dedup is by product.id
+ *************************************/
+function readWishlistItems() {
+    try {
+        const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed?.wishlistItems) ? parsed.wishlistItems : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeWishlistItems(items) {
+    localStorage.setItem(
+        WISHLIST_STORAGE_KEY,
+        JSON.stringify({ wishlistItems: items })
+    );
+}
+
+function isProductInWishlist(productId) {
+    return readWishlistItems().some((p) => p.id === productId);
+}
+
+function toggleProductInWishlist(product) {
+    const items = readWishlistItems();
+    const idx = items.findIndex((p) => p.id === product.id);
+    if (idx >= 0) items.splice(idx, 1);
+    else items.push(product);
+    writeWishlistItems(items);
+}
+
+/*************************************
+ * Inject Structured Data (JSON-LD) for SEO
+ *************************************/
+function injectProductListSchema(products, collectionSlug) {
+    const existing = document.getElementById("product-list-schema");
+    if (existing) existing.remove();
+    if (!Array.isArray(products) || products.length === 0) return;
+
+    const schema = {
+        "@context": "https://schema.org/",
+        "@type": "ItemList",
+        name: collectionSlug
+            ? collectionSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+            : "Products",
+        itemListElement: products.map((product, index) => {
+            const brandName = product.brand?.name ?? "Gemnote";
+            const productName = product.name ?? "";
+            const imageUrl = product.preferred_image_url ?? product.thumbnail_url ?? "";
+            const price = product.price ? String(product.price) : null;
+
+            const item = {
+                "@type": "Product",
+                name: `${brandName} ${productName}`.trim(),
+                image: imageUrl,
+                brand: { "@type": "Brand", name: brandName },
+            };
+
+            if (price) {
+                item.offers = {
+                    "@type": "AggregateOffer",
+                    lowPrice: price,
+                    priceCurrency: "USD",
+                    availability: "https://schema.org/InStock",
+                };
+            }
+
+            return { "@type": "ListItem", position: index + 1, item };
+        }),
+    };
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "product-list-schema";
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+}
+
+/*************************************
+ * Update a card's heart icon based on current wishlist state
+ *************************************/
+function updateCardFavoriteIcon(card, productId) {
+    const heartSvg = card.querySelector(".fav-icon-container-main button svg");
+    const heartPath = card.querySelector(".fav-icon-container-main button svg path");
+    if (!heartSvg || !heartPath) return;
+
+    if (isProductInWishlist(productId)) {
+        heartPath.style.fill = "#22211F";
+        heartPath.style.stroke = "#22211F";
+        heartSvg.classList.remove("fill-none");
+        heartSvg.classList.add("is-fav");
+    } else {
+        heartPath.style.fill = "none";
+        heartPath.style.stroke = "#22211F";
+        heartSvg.classList.add("fill-none");
+        heartSvg.classList.remove("is-fav");
+    }
+}
+
+/*************************************
+ * Attach handlers to a card
+ * - card click / Enter / Space → redirect to lookbook with ?product=<id>
+ *   (the lookbook auto-opens the product modal from that param)
+ * - heart button click → toggle wishlist (no redirect)
+ *************************************/
+function attachCardHandlers(card, product) {
+    const goToLookbook = () => {
+        if (!product.id) return;
+        const url = new URL(LOOKBOOK_URL);
+        url.searchParams.set("product", product.id);
+        window.location.href = url.toString();
+    };
+
+    const favBtn = card.querySelector(".fav-icon-container-main button");
+    if (favBtn) {
+        favBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            toggleProductInWishlist(product);
+            updateCardFavoriteIcon(card, product.id);
+        });
+    }
+
+    card.addEventListener("click", goToLookbook);
+    card.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            goToLookbook();
+        }
+    });
+}
+
+/*************************************
+ * Fetch and Render Products
  *************************************/
 const fetchAndRenderProducts = async () => {
     const lastSegment = siteUrl[siteUrl.length - 1];
@@ -33,7 +173,7 @@ const fetchAndRenderProducts = async () => {
             ? collection_name
             : "";
 
-    const endpoint = `${BASE_URL}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}&limit=10`;
+    const endpoint = `https://merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
     try {
         const res = await fetch(endpoint);
@@ -45,14 +185,11 @@ const fetchAndRenderProducts = async () => {
             return [];
         }
 
-        // Clear any previous content
         productsRoot.innerHTML = "";
 
-        // Grid wrapper (uses your existing CSS class)
         const grid = document.createElement("div");
         grid.className = "lookbook-product-grid-main";
 
-        // Ensure data.results exists (fallback to empty array)
         const items = Array.isArray(data.results) ? data.results : [];
 
         items.forEach((product) => {
@@ -60,21 +197,18 @@ const fetchAndRenderProducts = async () => {
             card.className = "lookbook-product-card-main cursor-pointer overflow-hidden";
             card.setAttribute("role", "button");
             card.setAttribute("tabindex", "0");
-            // Save product id/slug if available
             if (product.id) card.dataset.productId = product.id;
 
-            const imageUrl = BASE_URL + product.managed_image_url ?? "";
-            const brandName = product.brand_name ?? "Generic";
+            const imageUrl = product.thumbnail_url ?? product.preferred_image_url ?? "";
+            const brandName = product.brand?.name ?? "Generic";
             const productName = product.name ?? "";
-            const msrp = product.msrp ?? "";
+            const msrp = product.price ?? "";
 
             card.innerHTML = `
-        <!-- Image with hover zoom -->
         <div class="hover-zoom hover-zoom--basic bg-white-smoke">
-          <img src="${imageUrl}" alt="${escapeHtml(brandName + ' ' + productName)}" loading="lazy">
+          <img src="${imageUrl}" alt="${escapeHtml(brandName + " " + productName)}" loading="lazy">
         </div>
 
-        <!-- Favourite Icon -->
         <div class="fav-icon-container-main">
           <button type="button" class="relative cursor-pointer" aria-label="Toggle favorite">
             <svg width="18" height="18" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg"
@@ -85,141 +219,41 @@ const fetchAndRenderProducts = async () => {
           </button>
         </div>
 
-        <!-- Product Info -->
         <div class="flex flex-col mt-[8px] gap-[6px]">
           <p class="lookbook-product-name">${escapeHtml(productName)}</p>
           <p class="lookbook-product-brand">${escapeHtml(brandName)}</p>
           <div class="lookbook-product-price-container">
-            <p class="price">From $${escapeHtml(msrp)}</p>
+            <p class="price">From $${escapeHtml(String(msrp))}</p>
             <p class="min-units">Min. 50 units</p>
           </div>
         </div>
       `;
 
-            // Attach dataset for later access
-            card.dataset.name = `${brandName} ${productName}`.trim();
-            card.dataset.price = `${msrp}`;
-
             grid.appendChild(card);
+            attachCardHandlers(card, product);
+            updateCardFavoriteIcon(card, product.id);
         });
 
         productsRoot.appendChild(grid);
+        injectProductListSchema(items, collectionSlug);
 
-        // Return NodeList of created cards
         return document.querySelectorAll(".lookbook-product-card-main");
     } catch (err) {
         console.error("Failed to fetch products:", err);
         return [];
-    } finally {
-        if (typeof updateFavoritesIconStyles === "function") updateFavoritesIconStyles();
-    }
-};
-
-const handleFillFavoritesIcon = (item) => {
-    const nameEl = item.querySelector(".lookbook-product-name");
-    const productName = nameEl ? nameEl.textContent.trim() : (item.dataset.name || "").trim();
-
-    const wishlistCookie = getCookie('lookbook');
-    const wishlistItems = wishlistCookie ? JSON.parse(wishlistCookie) : [];
-    const isInWishlist = wishlistItems.some(w => w.text === productName);
-
-    const heartSvg = item.querySelector('.fav-icon-container-main button svg');
-    const heartPath = item.querySelector('.fav-icon-container-main button svg path');
-
-    if (heartSvg && heartPath) {
-        if (isInWishlist) {
-            heartPath.style.fill = '#22211F';
-            heartPath.style.stroke = '#22211F';
-            heartSvg.classList.remove('fill-none');
-            heartSvg.classList.add('is-fav');
-        } else {
-            heartPath.style.fill = 'none';
-            heartPath.style.stroke = '#22211F';
-            heartSvg.classList.add('fill-none');
-            heartSvg.classList.remove('is-fav');
-        }
-    }
-}
-
-/*************************************
- * Setup Product Click Events
- *************************************/
-const setupProductClickHandlers = async () => {
-    const productItems = await fetchAndRenderProducts();
-
-    if (productItems.length > 0) {
-        productItems.forEach((item) => {
-            // primary handler (for the whole card)
-            const handler = () => {
-                const productNameEl = item.querySelector(".lookbook-product-name");
-                const priceEl = item.querySelector(".price");
-                const imgEl = item.querySelector(".hover-zoom img");
-
-                const productName = productNameEl ? productNameEl.textContent.trim() : (item.dataset.name || "");
-                // extract numeric part of price if possible
-                let productPrice = 0;
-                if (priceEl) {
-                    const match = priceEl.textContent.match(/[\d.,]+/);
-                    productPrice = match ? parseFloat(match[0].replace(/,/g, "")) : 0;
-                } else if (item.dataset.price) {
-                    productPrice = parseFloat(item.dataset.price) || 0;
-                }
-                const productImage = imgEl ? imgEl.getAttribute("src") : "";
-
-                const product = {
-                    Name: productName,
-                    Price: productPrice,
-                    Image: productImage,
-                };
-
-                if (typeof saveToWishlist === "function") {
-                    saveToWishlist(product);
-                } else {
-                    console.info("saveToWishlist not defined. Product payload:", product);
-                }
-
-                handleFillFavoritesIcon(item)
-
-                if (typeof updateFavoritesIconStyles === "function") updateFavoritesIconStyles();
-            };
-
-            // click on the whole card
-            item.addEventListener("click", handler);
-
-            // favourite button inside the card (stops propagation, uses same handler)
-            const favBtn = item.querySelector("button");
-            if (favBtn) {
-                favBtn.addEventListener("click", (ev) => {
-                    ev.stopPropagation();
-                    handler();
-                });
-            }
-
-            // keyboard accessibility: Enter key toggles wishlist when focused
-            item.addEventListener("keydown", (ev) => {
-                if (ev.key === "Enter" || ev.key === " ") {
-                    ev.preventDefault();
-                    handler();
-                }
-            });
-        });
-    } else {
-        console.log("No product items found.");
     }
 };
 
 /*************************************
- * Conditional Initialization
+ * Initialize
  *************************************/
 if (subUrl !== "products-packaging") {
-    // initialize
-    setupProductClickHandlers();
+    fetchAndRenderProducts();
 }
 
 /*************************************
- * Small helper
+ * Helpers
  *************************************/
-// basic html escape for interpolated strings (avoid injecting raw HTML)
 function escapeHtml(str) {
     if (typeof str !== "string") return "";
     return str

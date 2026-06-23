@@ -9,8 +9,9 @@
      * Constants
      *************************************/
     const LOOKBOOK_URL = "https://merchos.gemnote.com/products/";
-    // Mirrors Pinia persist key in frontend/src/stores/wishlist.js
+    // Mirror Pinia persist keys in frontend/src/stores/{wishlist,cart}.js
     const WISHLIST_STORAGE_KEY = "merch-wishlist";
+    const CART_STORAGE_KEY = "merch-cart";
 
     /*************************************
      * Wishlist helpers (mirror Vue/Pinia store shape)
@@ -53,6 +54,37 @@
         const mobile = document.getElementById("mobile-wishlist-counter");
         if (desktop) desktop.textContent = String(count);
         if (mobile) mobile.textContent = String(count);
+    }
+
+    /*************************************
+     * Cart helpers (mirror Vue/Pinia store shape)
+     * localStorage shape: { "items": { [cartKey]: {...} }, ... }
+     * NOTE: `items` is an OBJECT keyed by line, not an array. Count distinct
+     * lines — matches the store's `uniqueProductCount` getter.
+     *************************************/
+    function readCartLineCount() {
+        try {
+            const raw = localStorage.getItem(CART_STORAGE_KEY);
+            if (!raw) return 0;
+            const parsed = JSON.parse(raw);
+            const items = parsed?.items;
+            return items && typeof items === "object" ? Object.keys(items).length : 0;
+        } catch {
+            return 0;
+        }
+    }
+
+    function updateCartCounters() {
+        const count = readCartLineCount();
+        const desktop = document.getElementById("cart-counter");
+        const mobile = document.getElementById("mobile-cart-counter");
+        if (desktop) desktop.textContent = String(count);
+        if (mobile) mobile.textContent = String(count);
+    }
+
+    function updateAllCounters() {
+        updateWishlistCounters();
+        updateCartCounters();
     }
 
     /*************************************
@@ -270,8 +302,15 @@
     /*************************************
      * Initialize
      *************************************/
-    updateWishlistCounters();
-    window.addEventListener("pageshow", updateWishlistCounters);
+    updateAllCounters();
+    window.addEventListener("pageshow", updateAllCounters);
+
+    // Live-sync both navbar badges when wishlist/cart change in another tab
+    // ON THIS SAME ORIGIN (storage events do not cross origins).
+    window.addEventListener("storage", (ev) => {
+        if (ev.key === WISHLIST_STORAGE_KEY) updateWishlistCounters();
+        if (ev.key === CART_STORAGE_KEY) updateCartCounters();
+    });
 
     if (subUrl !== "products-packaging") {
         fetchAndRenderProducts();

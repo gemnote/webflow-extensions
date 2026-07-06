@@ -48,12 +48,22 @@
         writeWishlistItems(items);
     }
 
+    /*************************************
+     * Counter display helper
+     * Mirrors the Vue components: hide the badge at 0, show it as `flex`
+     * above 0, and cap the label at "99+".
+     *************************************/
+    function applyCounter(el, count) {
+        if (!el) return;
+        const n = Number(count) || 0;
+        el.textContent = n > 99 ? "99+" : String(n);
+        el.style.display = n > 0 ? "flex" : "none";
+    }
+
     function updateWishlistCounters() {
         const count = readWishlistItems().length;
-        const desktop = document.getElementById("wishlist-counter");
-        const mobile = document.getElementById("mobile-wishlist-counter");
-        if (desktop) desktop.textContent = String(count);
-        if (mobile) mobile.textContent = String(count);
+        applyCounter(document.getElementById("wishlist-counter"), count);
+        applyCounter(document.getElementById("mobile-wishlist-counter"), count);
     }
 
     /*************************************
@@ -76,10 +86,8 @@
 
     function updateCartCounters() {
         const count = readCartLineCount();
-        const desktop = document.getElementById("cart-counter");
-        const mobile = document.getElementById("mobile-cart-counter");
-        if (desktop) desktop.textContent = String(count);
-        if (mobile) mobile.textContent = String(count);
+        applyCounter(document.getElementById("cart-counter"), count);
+        applyCounter(document.getElementById("mobile-cart-counter"), count);
     }
 
     function updateAllCounters() {

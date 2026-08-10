@@ -244,7 +244,7 @@
 
             items.forEach((product) => {
                 const card = document.createElement("div");
-                card.className = "lookbook-product-card-main cursor-pointer overflow-hidden";
+                card.className = "lookbook-product-card-main card-wrapper cursor-pointer overflow-hidden";
                 card.setAttribute("role", "button");
                 card.setAttribute("tabindex", "0");
                 if (product.id) card.dataset.productId = product.id;
@@ -255,26 +255,40 @@
                 const msrp = product.price ?? "";
 
                 card.innerHTML = `
-            <div class="hover-zoom hover-zoom--basic bg-white-smoke">
-              <img src="${imageUrl}" alt="${escapeHtml(brandName + " " + productName)}" loading="lazy">
+            <div class="card-image-container">
+              <div class="hover-zoom hover-zoom--basic bg-white-smoke overflow-hidden">
+                <img src="${imageUrl}" alt="${escapeHtml(brandName + " " + productName)}" class="w-full h-full object-cover" loading="lazy">
+              </div>
+
+              <div class="fav-icon-container-main">
+                <button type="button" class="relative cursor-pointer" aria-label="Toggle favorite">
+                  <svg width="24" height="23" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg"
+                    class="transition-colors duration-300 fill-none hover:fill-[#22211F]">
+                    <path d="M25.1268 2.84009L25.246 2.95689C27.6228 5.40725 27.584 9.29727 25.1298 11.7008L14 22.6003L2.87019 11.7008L2.87018 11.7007C0.37659 9.25879 0.376619 5.28213 2.87019 2.84008C5.3754 0.386643 9.47246 0.386632 11.9777 2.84009L13.2988 4.13382L13.9985 4.81903L14.6982 4.13382L16.0192 2.84009C18.5244 0.386643 22.6215 0.386632 25.1268 2.84009Z"
+                      stroke="#22211F" stroke-width="2"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="card-cta-overlay">
+                <button type="button" class="call-for-action light-btn card-cta-btn" aria-label="Add">
+                  <svg class="card-cta-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  Add
+                </button>
+              </div>
             </div>
 
-            <div class="fav-icon-container-main">
-              <button type="button" class="relative cursor-pointer" aria-label="Toggle favorite">
-                <svg width="18" height="18" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg"
-                  class="transition-colors duration-300 fill-none hover:fill-[#22211F]">
-                  <path d="M25.1268 2.84009L25.246 2.95689C27.6228 5.40725 27.584 9.29727 25.1298 11.7008L14 22.6003L2.87019 11.7008L2.87018 11.7007C0.37659 9.25879 0.376619 5.28213 2.87019 2.84008C5.3754 0.386643 9.47246 0.386632 11.9777 2.84009L13.2988 4.13382L13.9985 4.81903L14.6982 4.13382L16.0192 2.84009C18.5244 0.386643 22.6215 0.386632 25.1268 2.84009Z"
-                    stroke="#22211F" stroke-width="2"></path>
-                </svg>
-              </button>
-            </div>
-
-            <div class="flex flex-col mt-[8px] gap-[6px]">
-              <p class="lookbook-product-name">${escapeHtml(productName)}</p>
-              <p class="lookbook-product-brand">${escapeHtml(brandName)}</p>
-              <div class="lookbook-product-price-container">
-                <p class="price">From $${escapeHtml(String(msrp))}</p>
-                <p class="min-units">Min. 50 units</p>
+            <div class="flex flex-col mt-[8px] gap-[6px] w-full">
+              <div>
+                <p class="lookbook-product-name">${escapeHtml(productName)}</p>
+                <p class="lookbook-product-brand">${escapeHtml(brandName)}</p>
+              </div>
+              <div class="lookbook-product-price-container" style="justify-content: space-between !important;">
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <p class="price w-max"><span class="price-from">From</span> $${escapeHtml(String(msrp))}</p>
+                </div>
               </div>
             </div>
           `;

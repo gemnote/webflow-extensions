@@ -1,8 +1,22 @@
+/* Webfonts used by the product list — Host Grotesk (name/brand), DM Mono
+   (price + "from"), Inter (CTA + units). Mirrors the merchOS frontend
+   (src/assets/css/fonts.css). Must stay first: @import precedes all rules. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Host+Grotesk:wght@300..800&family=Inter:wght@400;500;600&display=swap');
+
+/* ────────────────────────────────
+   Grid
+──────────────────────────────── */
 .lookbook-product-grid-main {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
+    padding: 24px;
+    column-gap: 24px;
+    row-gap: 48px;
 }
 
+/* ────────────────────────────────
+   Card
+──────────────────────────────── */
 .lookbook-product-card-main {
     position: relative;
     display: flex;
@@ -11,20 +25,27 @@
     justify-content: space-between;
     height: 100%;
     box-sizing: border-box;
-    border-right: 1px solid black;
-    padding: 12px;
 }
-.lookbook-product-card-main:nth-child(5n) { border-right: none; }
 
-/* Top border on all but first row (5 items per row) */
-.lookbook-product-card-main:nth-child(n + 6) { border-top: 1px solid black; }
+/* Info section grows to fill the card so price rows align across the grid */
+.lookbook-product-card-main .flex {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 
 .lookbook-product-card-main img {
-    max-width: 100%;
-    max-height: 292px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     display: block;
-    margin: 0 auto;
+}
+
+/* ────────────────────────────────
+   Image tile
+──────────────────────────────── */
+.card-image-container {
+    position: relative;
 }
 
 .hover-zoom {
@@ -34,6 +55,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 .hover-zoom--basic img {
@@ -44,192 +67,280 @@
     transform: scale(1.03);
 }
 
+.bg-white-smoke {
+    background-color: #FFFFFF;
+}
+
+/* ────────────────────────────────
+   Favorite icon
+──────────────────────────────── */
 .fav-icon-container-main {
     position: absolute;
-    top: 23px;
-    right: 24px;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .fav-icon-container-main button {
     background: transparent;
+    border: none;
+    padding: 0;
 }
 
+/* ────────────────────────────────
+   "Add" CTA overlay (reveals on card hover; always-on round button on mobile)
+──────────────────────────────── */
+.card-cta-overlay {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.card-wrapper:hover .card-cta-overlay,
+.card-cta-overlay.card-cta-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.card-cta-btn.call-for-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    min-width: 0;
+    padding: 6px 20px;
+    border: 1px solid #000;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #22211F;
+    font-family: Inter, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+    letter-spacing: -0.32px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card-cta-btn.call-for-action:hover {
+    background: #22211F;
+    color: #FFFFFF;
+}
+
+.card-cta-icon {
+    display: none;
+}
+
+/* ────────────────────────────────
+   Product name / brand
+──────────────────────────────── */
 .lookbook-product-name {
     text-align: left;
-    font-size: 16px;
     margin-bottom: 0;
-    font-weight: 500;
-    color: black;
-    font-family: "Inter";
+    color: #22211F;
+    font-family: "Host Grotesk";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: -0.48px;
     width: 100%;
-    -webkit-line-clamp: 2;
+    text-transform: capitalize;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .lookbook-product-brand {
+    font-family: "Host Grotesk";
     font-size: 14px;
     font-weight: 500;
-    font-family: Inter, Arial, sans-serif;
+    line-height: 22px;
+    letter-spacing: -0.42px;
     color: #22211F;
     margin-bottom: 0;
     text-transform: capitalize;
     text-decoration: underline;
-    letter-spacing: -0.32px;
 }
 
 .lookbook-product-brand:hover {
     color: #AAA59B;
 }
 
+/* ────────────────────────────────
+   Price
+──────────────────────────────── */
 .lookbook-product-price-container {
     display: flex;
-    justify-content: flex-start !important;
+    justify-content: space-between;
     align-items: center;
     gap: 24px;
 }
 
-.lookbook-product-price-container .min-units {
-    font-size: 12px;
+.price {
+    margin-bottom: 0;
+    font-family: "DM Mono";
+    font-size: 14px;
+    font-style: normal;
     font-weight: 500;
+    line-height: 22px;
+    letter-spacing: 0.56px;
+    color: #22211F;
+}
+
+/* "From" prefix — lighter grey, uppercase mono, sits before the price */
+.price-from {
+    color: #AAA59B;
+    font-family: "DM Mono";
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+    letter-spacing: 0.56px;
+    text-transform: uppercase;
+}
+
+.lookbook-product-price-container .min-units {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 120%;
+    letter-spacing: -0.32px;
     font-family: Inter, Arial, sans-serif;
     color: #AAA59B;
     margin-bottom: 0;
 }
 
-.price {
-    margin-bottom: 0;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: Inter, Arial, sans-serif;
-    color: black;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.overflow-hidden {
-    overflow: hidden;
-}
-
-.bg-white-smoke {
-    background-color: #FFFFFF; /* Approximation of white-smoke */
-}
-
-.relative {
-    position: relative;
-}
-
+/* ────────────────────────────────
+   Utilities used by the card markup
+──────────────────────────────── */
+.cursor-pointer { cursor: pointer; }
+.overflow-hidden { overflow: hidden; }
+.relative { position: relative; }
 .transition-colors {
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
 }
+.duration-300 { transition-duration: 300ms; }
+.fill-none { fill: none; }
+.hover\:fill-\[\#22211F\]:hover { fill: #22211F; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.w-max { width: max-content; }
+.object-cover { object-fit: cover; }
+.mt-\[8px\] { margin-top: 8px; }
+.gap-\[6px\] { gap: 6px; }
 
-.duration-300 {
-    transition-duration: 300ms;
-}
-
-.fill-none {
-    fill: none;
-}
-
-.hover\:fill-\[\#22211F\]:hover {
-    fill: #22211F;
-}
-
-.flex {
-    display: flex;
-}
-
-.flex-col {
-    flex-direction: column;
-}
-
-.mt-\[8px\] {
-    margin-top: 8px;
-}
-
-.gap-\[6px\] {
-    gap: 6px;
-}
-
-
-.carousel {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  gap: 12px;
-}
-
-.carousel::-webkit-scrollbar { display: none; }
-
-.slide {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-}
-
-/* Breakpoints */
-@media (max-width: 1024px) {
-    .lookbook-product-grid-main {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
+/* ────────────────────────────────
+   Responsive (mirrors common-section-dividers.css)
+──────────────────────────────── */
 @media (min-width: 576px) and (max-width: 767px) {
-    .lookbook-product-grid-main {
-        padding-left: 10px;
-    }
+    .lookbook-product-grid-main { padding-left: 10px; }
+}
+
+@media (min-width: 992px) {
+    .lookbook-product-name { font-size: 14px; }
+    .price { font-size: 14px; }
+}
+
+@media (min-width: 1440px) and (max-width: 1919px) {
+    .lookbook-product-grid-main { grid-template-columns: repeat(5, 1fr); }
+}
+
+@media (min-width: 1920px) and (max-width: 2559px) {
+    .lookbook-product-grid-main { grid-template-columns: repeat(8, 1fr); }
+}
+
+@media (min-width: 2560px) and (max-width: 3839px) {
+    .lookbook-product-grid-main { grid-template-columns: repeat(10, 1fr); }
+}
+
+@media (min-width: 3840px) {
+    .lookbook-product-grid-main { grid-template-columns: repeat(12, 1fr); }
+}
+
+@media (max-width: 1024px) {
+    /* Tablets mirror the mobile 2-up product grid (all widths ≤1024px). */
+    .lookbook-product-grid-main { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .lookbook-product-grid-main { grid-template-columns: repeat(4, 1fr); }
+    .lookbook-product-grid-main {
+        grid-template-columns: repeat(2, 1fr);
+        padding-top: 24px;
+    }
+    .price,
+    .lookbook-product-name { font-size: 14px; }
+}
 
-  /* cancel the desktop rule on tablet */
-  .lookbook-product-card-main:nth-child(5n) { border-right: 1px solid black; }
+/* Touch/small screens: CTA is always visible as a round + button */
+@media (max-width: 767px) {
+    .card-cta-overlay {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        bottom: 12px;
+        right: 12px;
+    }
+    .card-cta-icon {
+        display: block;
+        width: 14px;
+        height: 14px;
+    }
+    .card-cta-btn.call-for-action {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        gap: 0;
+        font-size: 0;
+        letter-spacing: 0;
+        border-radius: 50%;
+        border: 1px solid #22211F;
+        background: #F5F2EE;
+    }
+}
 
-  /* now remove only the last column for a 4-col grid */
-  .lookbook-product-card-main:nth-child(4n) { border-right: none; }
-
-  /* top borders for rows after the first in a 4-col grid */
-  .lookbook-product-card-main:nth-child(n + 5) { border-top: 1px solid black; }
-
-  .lookbook-product-name {
-      font-size: 9px;
-  }
-  .lookbook-product-brand {
-      font-size: 9px;
-  }
-  .price {
-      font-size: 9px;
-  }
-  .lookbook-product-price-container .min-units {
-      font-size: 9px;
-  }
-
-  .gap-\[6px\] {
-    gap: 2px;
-  }
+@media (max-width: 640px) {
+    .lookbook-product-grid-main {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 16px;
+        column-gap: 12px;
+        row-gap: 32px;
+    }
+}
 
 @media (max-width: 480px) {
     .lookbook-product-grid-main {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      gap: 12px;
-      padding: 0px;
+        grid-template-columns: repeat(2, 1fr);
+        padding-left: 10px;
+        padding-right: 10px;
+        column-gap: 16px;
+        row-gap: 52px;
     }
-
-    .lookbook-product-grid-main::-webkit-scrollbar { display: none; }
-
-    .lookbook-product-card-main {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
+    .lookbook-product-price-container {
+        flex-direction: row;
+        justify-content: space-between;
     }
-
-    .lookbook-product-card-main:nth-child(5n),
-    .lookbook-product-card-main:nth-child(4n),
-    .lookbook-product-card-main:nth-child(n + 5) {
-        border-right: none;
-        border-top: none;
+    .lookbook-product-card-main img {
+        object-fit: cover;
     }
+    .fav-icon-container-main {
+        top: 10px;
+        right: 12px;
+    }
+    .hover-zoom {
+        height: auto;
+        width: 100%;
+    }
+    .price { font-size: 12px; }
 }

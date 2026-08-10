@@ -298,12 +298,17 @@
         height: 14px;
     }
     .card-cta-btn.call-for-action {
-        width: 44px;
-        height: 44px;
-        padding: 0;
-        gap: 0;
-        font-size: 0;
-        letter-spacing: 0;
+        width: 44px !important;
+        height: 44px !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        font-size: 0 !important;
+        /* The label ("Add"/"Added") is hidden via font-size:0, but letter- and
+           word-spacing still give it width, pushing the + icon off-centre. Zero
+           both (with !important, so the site's global button rules can't win)
+           so justify-content:center can truly centre the icon. */
+        letter-spacing: 0 !important;
+        word-spacing: 0 !important;
         border-radius: 50%;
         border: 1px solid #22211F;
         background: #F5F2EE;

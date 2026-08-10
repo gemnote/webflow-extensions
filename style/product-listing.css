@@ -122,11 +122,13 @@
     border-radius: 999px;
     background: #FFFFFF;
     color: #22211F;
-    font-family: Inter, sans-serif;
+    /* CTA buttons use DM Mono, uppercase (mirrors custom-buttons-designs.css) */
+    font-family: "DM Mono", monospace;
+    text-transform: uppercase;
     font-size: 13px;
     font-weight: 500;
     line-height: 18px;
-    letter-spacing: -0.32px;
+    letter-spacing: 0.56px;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
 }

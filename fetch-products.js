@@ -200,18 +200,22 @@
         let collection_name = "";
 
         switch (lastSegment) {
+            // Slugs whose Webflow URL differs from the backend collection slug
             case "event-giveaways":
                 collection_name = "events-conference-giveaways";
                 break;
             case "ecommerce-merchandise":
                 collection_name = "e-commerce-merchandise";
                 break;
+            // Site root (no slug) shows the homepage collection
             case "":
             case undefined:
                 collection_name = "homepage";
                 break;
+            // Any other page (e.g. "employee-swag") uses its URL slug directly
+            // as the collection slug.
             default:
-                collection_name = "homepage";
+                collection_name = lastSegment;
         }
 
         const collectionSlug =

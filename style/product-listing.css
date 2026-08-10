@@ -89,6 +89,30 @@
     padding: 0;
 }
 
+/* Heart: two-path SVG (outline always shown, solid cross-fades in). The solid
+   is visible when favorited OR on hover — so hovering an empty heart previews
+   the filled state, and hovering a favorited one previews removal. */
+.fav-heart {
+    display: block;
+}
+
+.fav-solid {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fav-btn:hover .fav-solid {
+    opacity: 1;
+}
+
+.fav-btn.is-fav .fav-solid {
+    opacity: 1;
+}
+
+.fav-btn.is-fav:hover .fav-solid {
+    opacity: 0;
+}
+
 /* ────────────────────────────────
    "Add" CTA overlay (reveals on card hover; always-on round button on mobile)
 ──────────────────────────────── */

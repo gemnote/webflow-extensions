@@ -30,12 +30,13 @@ const refreshWishlistCounter = () => {
     const wishlistCounter = document.getElementById('wishlist-counter');
     const wishlistMobileCounter = document.getElementById('mobile-wishlist-counter');
 
-    if (wishlistCounter) {
-        wishlistCounter.textContent = wishlistItems.length;
-    }
-    if (wishlistMobileCounter) {
-        wishlistMobileCounter.textContent = wishlistItems.length;
-    }
+    // Hide the badge entirely at 0; show as flex above 0 (cap at "99+").
+    const n = wishlistItems.length;
+    [wishlistCounter, wishlistMobileCounter].forEach((el) => {
+        if (!el) return;
+        el.textContent = n > 99 ? '99+' : String(n);
+        el.style.display = n > 0 ? 'flex' : 'none';
+    });
 };
 
 /*************************************

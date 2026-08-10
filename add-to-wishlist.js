@@ -41,6 +41,10 @@ const updateWishlistCounter = () => {
         if (!el) return;
         el.textContent = n > 99 ? '99+' : String(n);
         el.style.display = n > 0 ? 'flex' : 'none';
+        // Hide the badge wrapper (.wishlist-nuber-block) too, so no empty
+        // circle shows at 0.
+        const wrap = el.closest('[class*="nuber-block"]');
+        if (wrap) wrap.style.display = n > 0 ? '' : 'none';
     });
 }
 

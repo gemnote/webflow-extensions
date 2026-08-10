@@ -58,6 +58,12 @@
         const n = Number(count) || 0;
         el.textContent = n > 99 ? "99+" : String(n);
         el.style.display = n > 0 ? "flex" : "none";
+        // The number sits inside a badge wrapper (e.g. .wishlist-nuber-block /
+        // .cart-nuber-block) that carries the circle background — hide the whole
+        // wrapper at 0 so no empty circle shows. Restore to the Webflow default
+        // (blank, not forced flex) when shown.
+        const wrap = el.closest('[class*="nuber-block"]');
+        if (wrap) wrap.style.display = n > 0 ? "" : "none";
     }
 
     function updateWishlistCounters() {

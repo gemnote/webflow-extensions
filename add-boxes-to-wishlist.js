@@ -86,16 +86,21 @@ const refreshButtonStyles = () => {
         // Check if product is in the wishlist
         const isInWishlist = wishlistItems.some((wish) => wish.text === altProductName);
 
+        // Clear any legacy inline styles from the old design (tiled background
+        // image + hardcoded colors) so the CSS pill styling wins.
+        altAddButton.style.backgroundColor = '';
+        altAddButton.style.color = '';
+        altAddButton.style.backgroundImage = '';
+
+        // Toggle the "added" class (filled dark pill) and rebuild the label via
+        // innerHTML so the arrow span is preserved.
+        const arrow = ' <svg class="packages-btn-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="7" viewBox="0 0 14 7" fill="none" aria-hidden="true"><path d="M0 3.35352H13M10 6.35352L13 3.35352L10 0.353516" stroke="currentColor" stroke-linejoin="round"></path></svg>';
         if (isInWishlist) {
-            altAddButton.style.backgroundColor = 'black';
-            altAddButton.style.color = 'white';
-            altAddButton.style.backgroundImage = 'url(https://cdn.prod.website-files.com/6718ab0c5f7e6e98b11c3a7c/673742d3be3c146f36db76bb_gray-round-icon.png)';
-            altAddButton.textContent = 'added to favorites';
+            altAddButton.classList.add('packages-button--added');
+            altAddButton.innerHTML = 'Added to Favorites' + arrow;
         } else {
-            altAddButton.style.backgroundColor = '';
-            altAddButton.style.color = '';
-            altAddButton.style.backgroundImage = '';
-            altAddButton.textContent = 'add to favorites';
+            altAddButton.classList.remove('packages-button--added');
+            altAddButton.innerHTML = 'Add to Favorites' + arrow;
         }
     });
 };

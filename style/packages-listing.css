@@ -121,6 +121,17 @@
     color: #F5F2EE;
 }
 
+/* "Added" state — filled dark pill (no background image) */
+.packages-button--added,
+.packages-button--added.w-button,
+.packages-button--added:hover,
+.packages-button--added.w-button:hover {
+    background: #22211F;
+    color: #F5F2EE;
+    border-color: #22211F;
+    background-image: none;
+}
+
 .packages-btn-arrow {
     display: inline-block;
     transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);

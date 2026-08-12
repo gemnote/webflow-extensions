@@ -73,7 +73,7 @@ const fetchBoxProducts = async () => {
                 </div>
                 <div style="display: none;" class="price-block">${product.price}</div>
                 <p class="packages-pera">${product.description || ""}</p>
-                <a href="#" class="packages-button w-button">Add to Favorites <span class="packages-btn-arrow" aria-hidden="true">&rarr;</span></a>
+                <a href="#" class="packages-button w-button">Add to Favorites <svg class="packages-btn-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="7" viewBox="0 0 14 7" fill="none" aria-hidden="true"><path d="M0 3.35352H13M10 6.35352L13 3.35352L10 0.353516" stroke="currentColor" stroke-linejoin="round"></path></svg></a>
             `;
 
             wrapper.appendChild(block);

@@ -24,8 +24,13 @@ const setWishlistCookie = (name, value, daysToExpire) => {
  * Wishlist Counter
  *************************************/
 const refreshWishlistCounter = () => {
-    const wishlistCookie = getWishlistCookie('lookbook');
-    const wishlistItems = wishlistCookie ? JSON.parse(decodeURIComponent(wishlistCookie)) : [];
+    // Read the SHARED localStorage wishlist ("merch-wishlist") — the same store
+    // the product grid and packages now use — not the legacy `lookbook` cookie.
+    let wishlistItems = [];
+    try {
+        const parsed = JSON.parse(localStorage.getItem('merch-wishlist'));
+        if (Array.isArray(parsed?.wishlistItems)) wishlistItems = parsed.wishlistItems;
+    } catch (e) { /* keep empty */ }
 
     const wishlistCounter = document.getElementById('wishlist-counter');
     const wishlistMobileCounter = document.getElementById('mobile-wishlist-counter');

@@ -20,6 +20,78 @@ const BOX_BASE_ORIGIN = (function () {
 })();
 
 /*************************************
+ * Wishlist store (SHARED with the product grid)
+ * Boxes save to the SAME localStorage store as fetch-products.js — the Pinia
+ * "merch-wishlist" key, shape { wishlistItems: [...fullProductObjects] }, dedup
+ * by product.id — so packages show up on the favorites page alongside products.
+ * (Previously boxes wrote to a separate `lookbook` cookie the favorites page
+ * never read, so they never appeared.)
+ * Box-scoped function names avoid colliding with other top-level scripts.
+ *************************************/
+const BOX_WISHLIST_KEY = "merch-wishlist";
+
+function boxReadWishlist() {
+    try {
+        const raw = localStorage.getItem(BOX_WISHLIST_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed?.wishlistItems) ? parsed.wishlistItems : [];
+    } catch {
+        return [];
+    }
+}
+
+function boxWriteWishlist(items) {
+    localStorage.setItem(BOX_WISHLIST_KEY, JSON.stringify({ wishlistItems: items }));
+}
+
+function boxIsInWishlist(productId) {
+    return boxReadWishlist().some((p) => p.id === productId);
+}
+
+function boxToggleWishlist(product) {
+    const items = boxReadWishlist();
+    const idx = items.findIndex((p) => p.id === product.id);
+    if (idx >= 0) items.splice(idx, 1);
+    else items.push(product);
+    boxWriteWishlist(items);
+}
+
+/*************************************
+ * Wishlist counter (localStorage-based, mirrors fetch-products.js)
+ * Hide the badge (and its .wishlist-nuber-block wrapper) at 0; cap at "99+".
+ *************************************/
+function boxApplyCounter(el, count) {
+    if (!el) return;
+    const n = Number(count) || 0;
+    el.textContent = n > 99 ? "99+" : String(n);
+    el.style.display = n > 0 ? "flex" : "none";
+    const wrap = el.closest('[class*="nuber-block"]');
+    if (wrap) wrap.style.display = n > 0 ? "" : "none";
+}
+
+function boxUpdateWishlistCounters() {
+    const count = boxReadWishlist().length;
+    boxApplyCounter(document.getElementById("wishlist-counter"), count);
+    boxApplyCounter(document.getElementById("mobile-wishlist-counter"), count);
+}
+
+/*************************************
+ * Favorites button label + state
+ *************************************/
+const BOX_ARROW = ' <svg class="packages-btn-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="7" viewBox="0 0 14 7" fill="none" aria-hidden="true"><path d="M0 3.35352H13M10 6.35352L13 3.35352L10 0.353516" stroke="currentColor" stroke-linejoin="round"></path></svg>';
+
+function boxSetButtonState(button, isFav) {
+    if (!button) return;
+    button.classList.toggle("packages-button--added", isFav);
+    button.innerHTML = (isFav ? "Added to Favorites" : "Add to Favorites") + BOX_ARROW;
+    // Clear any legacy inline styles from the old cookie-based design.
+    button.style.backgroundColor = "";
+    button.style.color = "";
+    button.style.backgroundImage = "";
+}
+
+/*************************************
  * Fetch and Render Box Products
  *************************************/
 
@@ -55,15 +127,20 @@ const fetchBoxProducts = async () => {
         const data = await res.json();
 
         const productsRoot = document.getElementById("box-products-root");
+        if (!productsRoot) return [];
 
         // Create wrapper container for product cards
         const wrapper = document.createElement("div");
         wrapper.className = `packages-wrap ${data.count > 3 ? "_4-grid" : ""}`;
 
-        // Generate product cards and append to wrapper
-        data.results.forEach(product => {
+        const items = Array.isArray(data.results) ? data.results : [];
+
+        // Generate product cards, wire up favorites, and append to wrapper
+        items.forEach(product => {
             const block = document.createElement("div");
             block.className = "packages-block";
+
+            const fav = boxIsInWishlist(product.id);
 
             block.innerHTML = `
                 <div class="packages-sub">Custom</div>
@@ -73,8 +150,19 @@ const fetchBoxProducts = async () => {
                 </div>
                 <div style="display: none;" class="price-block">${product.price}</div>
                 <p class="packages-pera">${product.description || ""}</p>
-                <a href="#" class="packages-button w-button">Add to Favorites <svg class="packages-btn-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="7" viewBox="0 0 14 7" fill="none" aria-hidden="true"><path d="M0 3.35352H13M10 6.35352L13 3.35352L10 0.353516" stroke="currentColor" stroke-linejoin="round"></path></svg></a>
+                <a href="#" class="packages-button w-button${fav ? " packages-button--added" : ""}">${fav ? "Added to Favorites" : "Add to Favorites"}${BOX_ARROW}</a>
             `;
+
+            // Toggle this product in the SHARED wishlist (full object, by id).
+            const button = block.querySelector(".packages-button");
+            if (button) {
+                button.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    boxToggleWishlist(product);
+                    boxSetButtonState(button, boxIsInWishlist(product.id));
+                    boxUpdateWishlistCounters();
+                });
+            }
 
             wrapper.appendChild(block);
         });
@@ -83,55 +171,26 @@ const fetchBoxProducts = async () => {
         productsRoot.innerHTML = "";
         productsRoot.appendChild(wrapper);
 
+        // Reflect the shared wishlist count now that the page is populated.
+        boxUpdateWishlistCounters();
+
         return document.querySelectorAll('.packages-block');
     } catch (err) {
         console.error("Failed to fetch products:", err);
         return [];
-    } finally {
-        refreshButtonStyles(); // Ensure button styles are updated
     }
 };
 
 /*************************************
- * Setup Click Events on Box Products
+ * Initialize
  *************************************/
+// Keep both navbar badges in sync if the wishlist changes in another tab.
+window.addEventListener("storage", (ev) => {
+    if (ev.key === BOX_WISHLIST_KEY) boxUpdateWishlistCounters();
+});
+window.addEventListener("pageshow", boxUpdateWishlistCounters);
 
-// Add click listeners to each product block to handle wishlist logic
-const setupBoxProductClickHandlers = async () => {
-    const productItems = await fetchBoxProducts();
-
-    if (productItems.length > 0) {
-        productItems.forEach((item) => {
-            const button = item.querySelector('.packages-button');
-            if (button) {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-
-                    const productName = item.querySelector('.packages-heading').textContent;
-                    const productImage = item.querySelector('.packages-image').getAttribute('src');
-                    const priceBlocks = item.querySelectorAll('.price-block');
-                    const productPrice = parseFloat(priceBlocks[0].textContent.trim());
-
-                    const product = {
-                        Name: productName,
-                        Price: productPrice,
-                        Image: productImage,
-                    };
-
-                    saveToWishlist(product);
-                    refreshButtonStyles(); // Update button appearance
-                });
-            }
-        });
-    } else {
-        console.log('No product items found.');
-    }
-};
-
-/*************************************
- * Conditional Initialization
- *************************************/
-
-// Only run the product fetch and setup if URL matches expected pattern
-if (boxSubUrl === 'products-packaging')
-    setupBoxProductClickHandlers();
+// Only fetch/render on the packaging page.
+if (boxSubUrl === 'products-packaging') {
+    fetchBoxProducts();
+}

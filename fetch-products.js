@@ -8,7 +8,11 @@
     /*************************************
      * Constants
      *************************************/
-    const LOOKBOOK_URL = "https://merchos.gemnote.com/products/";
+    // Derive the origin from the page at load time so the same script targets
+    // the right environment (staging vs production) with no manual edits — the
+    // Webflow site and the lookbook/API share a domain per environment.
+    const BASE_ORIGIN = window.location.origin;
+    const LOOKBOOK_URL = `${BASE_ORIGIN}/products/`;
     // Mirror Pinia persist keys in frontend/src/stores/{wishlist,cart}.js
     const WISHLIST_STORAGE_KEY = "merch-wishlist";
     const CART_STORAGE_KEY = "merch-cart";
@@ -223,7 +227,7 @@
                 ? collection_name
                 : "";
 
-        const endpoint = `https://merchos.gemnote.com/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
+        const endpoint = `${BASE_ORIGIN}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
         try {
             const res = await fetch(endpoint);

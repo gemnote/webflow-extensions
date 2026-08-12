@@ -1,0 +1,160 @@
+/* Fonts — Host Grotesk (headings) + DM Mono (CUSTOM label + button). Mirrors
+   the merchOS design system; @import must precede all other rules. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Host+Grotesk:wght@300..800&display=swap');
+
+/* ────────────────────────────────
+   Grid — divider-line layout (top line + vertical rules between columns)
+──────────────────────────────── */
+.packages-wrap,
+.packages-wrap._4-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0;
+    border-bottom: 1px solid #E4E1DB;
+}
+
+/* ────────────────────────────────
+   Card
+──────────────────────────────── */
+.packages-block {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 24px;
+    background: transparent;
+    border-top: 1px solid #E4E1DB;
+    border-right: 1px solid #E4E1DB;
+}
+
+/* no vertical rule after the last column */
+.packages-block:nth-child(3n) {
+    border-right: none;
+}
+
+/* ────────────────────────────────
+   "CUSTOM" eyebrow
+──────────────────────────────── */
+.packages-sub {
+    font-family: "DM Mono", monospace;
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.56px;
+    color: #AAA59B;
+    margin: 0 0 6px;
+}
+
+/* ────────────────────────────────
+   Heading
+──────────────────────────────── */
+.packages-heading {
+    font-family: "Host Grotesk", Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.4px;
+    color: #22211F;
+    text-transform: capitalize;
+    margin: 0 0 16px;
+}
+
+/* ────────────────────────────────
+   Image tile
+──────────────────────────────── */
+.packages-image-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    background: #FCFAF4;
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.packages-image {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* Description isn't part of this design */
+.packages-pera {
+    display: none;
+}
+
+/* ────────────────────────────────
+   "Add to Favorites →" pill button
+──────────────────────────────── */
+.packages-button.w-button,
+.packages-button {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 8px 20px;
+    border: 1px solid #22211F;
+    border-radius: 999px;
+    background: transparent;
+    color: #22211F;
+    font-family: "DM Mono", monospace;
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.56px;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.packages-button.w-button:hover,
+.packages-button:hover {
+    background: #22211F;
+    color: #F5F2EE;
+}
+
+.packages-btn-arrow {
+    display: inline-block;
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.packages-button:hover .packages-btn-arrow {
+    transform: translateX(4px);
+}
+
+/* ────────────────────────────────
+   Responsive
+──────────────────────────────── */
+@media (max-width: 1024px) {
+    .packages-wrap,
+    .packages-wrap._4-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    /* 2-up: rule after col 1 only */
+    .packages-block:nth-child(3n) { border-right: 1px solid #E4E1DB; }
+    .packages-block:nth-child(2n) { border-right: none; }
+}
+
+@media (max-width: 768px) {
+    .packages-wrap,
+    .packages-wrap._4-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+    }
+    .packages-block {
+        border-right: none !important;
+        border-top: 1px solid #E4E1DB;
+        padding: 24px 0;
+    }
+    .packages-heading {
+        font-size: 18px;
+    }
+}

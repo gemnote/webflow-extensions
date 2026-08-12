@@ -5,7 +5,10 @@
 // Extract the current URL path segments and get the second-to-last segment
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
-// const BASE_URL = 'https://staging-merchos.gemnote.com'
+// Derive the origin from the page at load time so boxes target the right
+// environment (staging vs production) with no manual edits. Uniquely named to
+// avoid colliding with any global BASE_URL declared by another script.
+const BOX_BASE_ORIGIN = window.location.origin;
 
 /*************************************
  * Fetch and Render Box Products
@@ -36,7 +39,7 @@ const fetchBoxProducts = async () => {
     const collectionSlug = isValidCollection ? collection_name : '';
 
     // API endpoint for fetching products by collection slug
-    const endpoint = `${BASE_URL}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
+    const endpoint = `${BOX_BASE_ORIGIN}/api/v1/products/?is_active=&has_variants=&can_be_customized=&min_price=&max_price=&brand_slug=&category_slug=&collection_slug=${collectionSlug}`;
 
     try {
         const res = await fetch(endpoint);
@@ -56,10 +59,12 @@ const fetchBoxProducts = async () => {
             block.innerHTML = `
                 <div class="packages-sub">Custom</div>
                 <h2 class="packages-heading">${product.name}</h2>
-                <img src="${product.thumbnail_url}" loading="lazy" alt="${product.name}" class="packages-image">
+                <div class="packages-image-wrap">
+                    <img src="${product.thumbnail_url}" loading="lazy" alt="${product.name}" class="packages-image">
+                </div>
                 <div style="display: none;" class="price-block">${product.price}</div>
                 <p class="packages-pera">${product.description || ""}</p>
-                <a href="#" class="packages-button w-button">add to favorites</a>
+                <a href="#" class="packages-button w-button">Add to Favorites <span class="packages-btn-arrow" aria-hidden="true">&rarr;</span></a>
             `;
 
             wrapper.appendChild(block);

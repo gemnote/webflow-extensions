@@ -5,10 +5,19 @@
 // Extract the current URL path segments and get the second-to-last segment
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
-// Derive the origin from the page at load time so boxes target the right
-// environment (staging vs production) with no manual edits. Uniquely named to
+// Resolve the merchOS origin from the current environment so boxes target
+// staging vs production with no manual edits. The Webflow site and the merchOS
+// API are separate hosts, so window.location.origin can't be used directly
+// (that host returns HTML, not JSON). Default to production. Uniquely named to
 // avoid colliding with any global BASE_URL declared by another script.
-const BOX_BASE_ORIGIN = window.location.origin;
+const BOX_BASE_ORIGIN = (function () {
+    const { origin, hostname } = window.location;
+    if (/merchos\.gemnote\.com$/i.test(hostname)) return origin;
+    const isStaging = /staging|\.webflow\.io$|localhost|127\.0\.0\.1|\.local$/i.test(hostname);
+    return isStaging
+        ? 'https://staging-merchos.gemnote.com'
+        : 'https://merchos.gemnote.com';
+})();
 
 /*************************************
  * Fetch and Render Box Products

@@ -8,10 +8,22 @@
     /*************************************
      * Constants
      *************************************/
-    // Derive the origin from the page at load time so the same script targets
-    // the right environment (staging vs production) with no manual edits — the
-    // Webflow site and the lookbook/API share a domain per environment.
-    const BASE_ORIGIN = window.location.origin;
+    // Resolve the merchOS origin from the current environment so the same script
+    // targets staging vs production with no manual edits. The Webflow site and
+    // the merchOS app/API are separate hosts, so we can't just use
+    // window.location.origin — that host doesn't serve /api or /products and
+    // returns HTML. Map by hostname instead, defaulting to production so prod is
+    // never accidentally pointed at staging.
+    const BASE_ORIGIN = (function () {
+        const { origin, hostname } = window.location;
+        // Already on a merchOS host (staging or prod) → use it directly.
+        if (/merchos\.gemnote\.com$/i.test(hostname)) return origin;
+        // Otherwise pick the merchOS host matching this environment.
+        const isStaging = /staging|\.webflow\.io$|localhost|127\.0\.0\.1|\.local$/i.test(hostname);
+        return isStaging
+            ? "https://staging-merchos.gemnote.com"
+            : "https://merchos.gemnote.com";
+    })();
     const LOOKBOOK_URL = `${BASE_ORIGIN}/products/`;
     // Mirror Pinia persist keys in frontend/src/stores/{wishlist,cart}.js
     const WISHLIST_STORAGE_KEY = "merch-wishlist";

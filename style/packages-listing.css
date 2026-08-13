@@ -5,7 +5,12 @@
 /* ────────────────────────────────
    Grid — divider-line layout (top line + vertical rules between columns)
 ──────────────────────────────── */
-.packages-wrap,
+.packages-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0;
+    border-bottom: 1px solid #E4E1DB;
+}
 .packages-wrap._4-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -67,11 +72,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
     background: #FCFAF4;
     border-radius: 16px;
     overflow: hidden;
-    padding: 24px;
     box-sizing: border-box;
 }
 
@@ -80,7 +83,7 @@
     max-height: 100%;
     width: auto;
     height: auto;
-    object-fit: contain;
+    object-fit: none;
     display: block;
     background-color: transparent !important;
 }

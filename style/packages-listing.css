@@ -82,6 +82,7 @@
     height: auto;
     object-fit: contain;
     display: block;
+    background-color: transparent !important;
 }
 
 /* Description isn't part of this design */

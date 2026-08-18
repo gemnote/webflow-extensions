@@ -77,6 +77,39 @@ function boxUpdateWishlistCounters() {
 }
 
 /*************************************
+ * Cart counter (localStorage-based, mirrors fetch-products.js)
+ * The packaging page never writes the cart — merchOS does — but the navbar badge
+ * lives on this page too, so it has to be painted from the shared store on
+ * render. localStorage shape: { "items": { [cartKey]: {...} }, ... } — `items`
+ * is an OBJECT keyed by line, so count distinct lines (the store's
+ * `uniqueProductCount` getter).
+ *************************************/
+const BOX_CART_KEY = "merch-cart";
+
+function boxReadCartLineCount() {
+    try {
+        const raw = localStorage.getItem(BOX_CART_KEY);
+        if (!raw) return 0;
+        const parsed = JSON.parse(raw);
+        const items = parsed?.items;
+        return items && typeof items === "object" ? Object.keys(items).length : 0;
+    } catch {
+        return 0;
+    }
+}
+
+function boxUpdateCartCounters() {
+    const count = boxReadCartLineCount();
+    boxApplyCounter(document.getElementById("cart-counter"), count);
+    boxApplyCounter(document.getElementById("mobile-cart-counter"), count);
+}
+
+function boxUpdateAllCounters() {
+    boxUpdateWishlistCounters();
+    boxUpdateCartCounters();
+}
+
+/*************************************
  * Favorites button label + state
  *************************************/
 const BOX_ARROW = ' <svg class="packages-btn-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="7" viewBox="0 0 14 7" fill="none" aria-hidden="true"><path d="M0 3.35352H13M10 6.35352L13 3.35352L10 0.353516" stroke="currentColor" stroke-linejoin="round"></path></svg>';
@@ -171,8 +204,8 @@ const fetchBoxProducts = async () => {
         productsRoot.innerHTML = "";
         productsRoot.appendChild(wrapper);
 
-        // Reflect the shared wishlist count now that the page is populated.
-        boxUpdateWishlistCounters();
+        // Reflect the shared wishlist + cart counts now that the page is populated.
+        boxUpdateAllCounters();
 
         return document.querySelectorAll('.packages-block');
     } catch (err) {
@@ -184,11 +217,17 @@ const fetchBoxProducts = async () => {
 /*************************************
  * Initialize
  *************************************/
-// Keep both navbar badges in sync if the wishlist changes in another tab.
+// Paint both navbar badges on every page that loads this script, not just the
+// packaging page — the render path below only runs on /products-packaging.
+boxUpdateAllCounters();
+
+// Keep both navbar badges in sync if the wishlist or cart changes in another tab
+// ON THIS SAME ORIGIN (storage events do not cross origins).
 window.addEventListener("storage", (ev) => {
     if (ev.key === BOX_WISHLIST_KEY) boxUpdateWishlistCounters();
+    if (ev.key === BOX_CART_KEY) boxUpdateCartCounters();
 });
-window.addEventListener("pageshow", boxUpdateWishlistCounters);
+window.addEventListener("pageshow", boxUpdateAllCounters);
 
 // Only fetch/render on the packaging page.
 if (boxSubUrl === 'products-packaging') {

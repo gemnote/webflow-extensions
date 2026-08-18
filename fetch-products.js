@@ -316,6 +316,12 @@
             productsRoot.appendChild(grid);
             injectProductListSchema(items, collectionSlug);
 
+            // Repaint both navbar badges after render. The initial call at the
+            // bottom of this file can run before the Webflow navbar is in the DOM
+            // (or before the cart was written on a prior page), so re-read the
+            // shared stores once the grid is up.
+            updateAllCounters();
+
             return document.querySelectorAll(".lookbook-product-card-main");
         } catch (err) {
             console.error("Failed to fetch products:", err);

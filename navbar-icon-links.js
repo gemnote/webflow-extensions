@@ -8,73 +8,148 @@
  * Paths are SAME-ORIGIN and relative on purpose — no host is hardcoded. merchOS
  * is served under the same domain as the Webflow site (that's also why the navbar
  * badges can read merchOS's `merch-cart` out of localStorage at all — localStorage
- * is per-origin), so production, staging and local all resolve correctly from
- * whatever host the page is already on.
+ * is per-origin), so production, staging and local all resolve from whatever host
+ * the page is already on.
  *
  * Targets mirror merchOS's own navbar (frontend/src/components/Navbar/index.vue):
  *   cart  → /products/checkout/
  *   heart → /products/favorites/
  *
- * Load this site-wide (Webflow → Project Settings → Custom Code → Footer) so the
- * icons work on every page, not just the ones that render a product grid.
+ * DELEGATION, not per-element listeners. The desktop and mobile navbars are
+ * separate copies of the same blocks, and the mobile one is frequently revealed
+ * or cloned by Webflow after DOMContentLoaded — listeners bound up front never
+ * reach those nodes (and a clone carries any "already wired" marker with it while
+ * dropping the listeners, so the marker lies). One listener on the document
+ * catches every copy, whenever it appears.
+ *
+ * Load site-wide (Webflow → Project Settings → Custom Code → Footer).
  *************************************/
 (function () {
     const CART_PATH = "/products/checkout/";
     const FAVORITES_PATH = "/products/favorites/";
 
+    // Explicit class list first — cheapest and covers the known navbars. Both the
+    // desktop and mobile copies use these same classes.
+    const CART_SEL = ".cart-header-block, .cart-block";
+    const FAVORITES_SEL = ".wishlist-block, .wishlist-header-block";
+
+    // Fallback for a navbar whose wrapper classes differ: the counter badges carry
+    // known ids, so walk up from one to the icon block that contains it.
+    const COUNTER_IDS = [
+        ["cart-counter", CART_PATH],
+        ["mobile-cart-counter", CART_PATH],
+        ["wishlist-counter", FAVORITES_PATH],
+        ["mobile-wishlist-counter", FAVORITES_PATH],
+    ];
+
     /**
-     * Make a non-anchor block behave like a link: pointer cursor, focusable,
-     * activatable by mouse, Enter and Space. `data-navLinked` keeps a second copy
-     * of this script (or a re-run) from binding the same block twice.
+     * Which page, if any, does this event target belong to? Resolved live on every
+     * interaction rather than cached, so nodes added or replaced after load work
+     * with no re-initialisation.
      */
-    function wire(el, path, label) {
-        if (!el || el.dataset.navLinked === "1") return;
-        el.dataset.navLinked = "1";
+    function destinationFor(target) {
+        if (!target || typeof target.closest !== "function") return null;
 
-        // Leave a real anchor alone — Webflow already handles navigation for it.
-        if (el.closest("a")) return;
+        if (target.closest(CART_SEL)) return CART_PATH;
+        if (target.closest(FAVORITES_SEL)) return FAVORITES_PATH;
 
-        el.style.cursor = "pointer";
-        el.setAttribute("role", "link");
-        el.setAttribute("tabindex", "0");
-        el.setAttribute("aria-label", label);
+        for (const [id, path] of COUNTER_IDS) {
+            const counter = document.getElementById(id);
+            if (!counter) continue;
+            // Climb a few levels from the badge to the icon block (the element that
+            // also holds the icon <img>/<svg>), then test containment.
+            let node = counter.parentElement;
+            for (let hop = 0; node && hop < 4; hop++, node = node.parentElement) {
+                if (!node.querySelector("img, svg")) continue;
+                if (node.contains(target)) return path;
+                break;
+            }
+        }
+        return null;
+    }
 
-        // Root-relative assignment: the browser resolves it against the current
-        // origin, so the same build works on every domain we deploy to.
-        const go = () => { window.location.href = path; };
-        el.addEventListener("click", go);
-        el.addEventListener("keydown", (ev) => {
-            if (ev.key === "Enter" || ev.key === " ") {
-                ev.preventDefault();
-                go();
+    function navigate(path) {
+        // Root-relative: the browser resolves it against the current origin, so the
+        // same build works on every domain we deploy to.
+        window.location.href = path;
+    }
+
+    /**
+     * Capture phase, so this runs before any Webflow interaction on the same block
+     * can swallow the event.
+     */
+    document.addEventListener("click", (ev) => {
+        const path = destinationFor(ev.target);
+        if (!path) return;
+
+        // If Webflow already wrapped the icon in a real link, let that link win.
+        // An empty or placeholder href is not a real link — take over instead.
+        const anchor = ev.target.closest("a");
+        const href = anchor && anchor.getAttribute("href");
+        if (href && href !== "#" && !/^javascript:/i.test(href)) return;
+
+        ev.preventDefault();
+        navigate(path);
+    }, true);
+
+    document.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Enter" && ev.key !== " ") return;
+        const path = destinationFor(ev.target);
+        if (!path) return;
+        ev.preventDefault();
+        navigate(path);
+    }, true);
+
+    // iOS Safari does not reliably fire `click` on non-interactive elements such as
+    // a bare <div>. Treat a tap that barely moved as a click; anything further is a
+    // scroll and must be ignored.
+    let touchStart = null;
+    document.addEventListener("touchstart", (ev) => {
+        const t = ev.touches && ev.touches[0];
+        touchStart = t ? { x: t.clientX, y: t.clientY, target: ev.target } : null;
+    }, { capture: true, passive: true });
+
+    document.addEventListener("touchend", (ev) => {
+        const start = touchStart;
+        touchStart = null;
+        if (!start) return;
+
+        const t = ev.changedTouches && ev.changedTouches[0];
+        if (!t) return;
+        if (Math.abs(t.clientX - start.x) > 10 || Math.abs(t.clientY - start.y) > 10) return;
+
+        const path = destinationFor(start.target);
+        if (!path) return;
+
+        const anchor = start.target.closest && start.target.closest("a");
+        const href = anchor && anchor.getAttribute("href");
+        if (href && href !== "#" && !/^javascript:/i.test(href)) return;
+
+        ev.preventDefault();
+        navigate(path);
+    }, true);
+
+    /**
+     * Cosmetic only — the pointer cursor, focus stop and screen-reader label. The
+     * click handling above does not depend on this having run, which is the whole
+     * point of delegating. Re-run on pageshow to pick up a restored page.
+     */
+    function decorate() {
+        document.querySelectorAll(`${CART_SEL}, ${FAVORITES_SEL}`).forEach((el) => {
+            if (el.closest("a")) return;
+            el.style.cursor = "pointer";
+            el.setAttribute("role", "link");
+            el.setAttribute("tabindex", "0");
+            if (!el.getAttribute("aria-label")) {
+                el.setAttribute("aria-label", el.matches(CART_SEL) ? "Cart" : "Favorites");
             }
         });
     }
 
-    function wireNavbarIcons() {
-        // querySelectorAll, not getElementById: the desktop and mobile navbars are
-        // separate copies of the same block, and both need wiring.
-        document.querySelectorAll(".cart-header-block").forEach((el) => wire(el, CART_PATH, "Cart"));
-        document.querySelectorAll(".wishlist-block").forEach((el) => wire(el, FAVORITES_PATH, "Favorites"));
-
-        // Fallback for navbars whose wrapper classes differ: walk up from the
-        // counter badge, which is keyed by a known id in both navbars.
-        [
-            ["cart-counter", CART_PATH, "Cart"],
-            ["mobile-cart-counter", CART_PATH, "Cart"],
-            ["wishlist-counter", FAVORITES_PATH, "Favorites"],
-            ["mobile-wishlist-counter", FAVORITES_PATH, "Favorites"],
-        ].forEach(([id, path, label]) => {
-            const counter = document.getElementById(id);
-            if (!counter) return;
-            const block = counter.closest(".cart-header-block, .wishlist-block, .cart-block, .wishlist-header-block");
-            if (block) wire(block, path, label);
-        });
-    }
-
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", wireNavbarIcons);
+        document.addEventListener("DOMContentLoaded", decorate);
     } else {
-        wireNavbarIcons();
+        decorate();
     }
+    window.addEventListener("pageshow", decorate);
 })();

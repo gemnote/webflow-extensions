@@ -24,7 +24,12 @@
             ? "https://staging-merchos.gemnote.com"
             : "https://merchos.gemnote.com";
     })();
-    const LOOKBOOK_URL = `${BASE_ORIGIN}/products/`;
+    // Product permalink base. merchOS serves each product at
+    // /products/<slug>/ (app/lookbook/urls.py → `product_permalink`) — the same
+    // URL its detail modal pushes when it opens. Trailing-slash form only on
+    // that route, so always build it with one; a slash-less URL only works via
+    // Django's APPEND_SLASH redirect.
+    const PRODUCT_URL_BASE = `${BASE_ORIGIN}/products/`;
     // Mirror Pinia persist keys in frontend/src/stores/{wishlist,cart}.js
     const WISHLIST_STORAGE_KEY = "merch-wishlist";
     const CART_STORAGE_KEY = "merch-cart";
@@ -177,16 +182,17 @@
 
     /*************************************
      * Attach handlers to a card
-     * - card click / Enter / Space → redirect to lookbook with ?product=<id>
-     *   (the lookbook auto-opens the product modal from that param)
+     * - card click / Enter / Space → open the product permalink
+     *   (/products/<slug>/, which renders the product detail directly)
      * - heart button click → toggle wishlist (no redirect)
      *************************************/
     function attachCardHandlers(card, product) {
-        const goToLookbook = () => {
-            if (!product.id) return;
-            const url = new URL(LOOKBOOK_URL);
-            url.searchParams.set("product", product.id);
-            window.location.href = url.toString();
+        const goToProduct = () => {
+            // Slug-only: the permalink route takes no query params, and a product
+            // without a slug has no addressable page — bail rather than send the
+            // visitor to a 404.
+            if (!product.slug) return;
+            window.location.href = PRODUCT_URL_BASE + encodeURIComponent(product.slug) + "/";
         };
 
         const favBtn = card.querySelector(".fav-icon-container-main button");
@@ -199,11 +205,11 @@
             });
         }
 
-        card.addEventListener("click", goToLookbook);
+        card.addEventListener("click", goToProduct);
         card.addEventListener("keydown", (ev) => {
             if (ev.key === "Enter" || ev.key === " ") {
                 ev.preventDefault();
-                goToLookbook();
+                goToProduct();
             }
         });
     }

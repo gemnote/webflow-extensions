@@ -18,6 +18,12 @@ const BOX_BASE_ORIGIN = (function () {
         ? 'https://staging-merchos.gemnote.com'
         : 'https://merchos.gemnote.com';
 })();
+// Product permalink base — mirrors PRODUCT_URL_BASE in fetch-products.js.
+// merchOS serves each product at /products/<slug>/ (app/lookbook/urls.py →
+// `product_permalink`). That route is registered in trailing-slash form only,
+// so always build the URL with one; without it every click eats an APPEND_SLASH
+// 301. No query params — the slug is the whole address.
+const BOX_PRODUCT_URL_BASE = `${BOX_BASE_ORIGIN}/products/`;
 
 /*************************************
  * Wishlist store (SHARED with the product grid)
@@ -172,6 +178,13 @@ const fetchBoxProducts = async () => {
         items.forEach(product => {
             const block = document.createElement("div");
             block.className = "packages-block";
+            // Whole card is the link target (same pattern as the product grid),
+            // so it needs to read and behave as one control.
+            if (product.slug) {
+                block.setAttribute("role", "button");
+                block.setAttribute("tabindex", "0");
+                block.style.cursor = "pointer";
+            }
 
             const fav = boxIsInWishlist(product.id);
 
@@ -191,11 +204,36 @@ const fetchBoxProducts = async () => {
             if (button) {
                 button.addEventListener("click", (e) => {
                     e.preventDefault();
+                    // Keep the favorites CTA from also triggering the card's
+                    // navigation below.
+                    e.stopPropagation();
                     boxToggleWishlist(product);
                     boxSetButtonState(button, boxIsInWishlist(product.id));
                     boxUpdateWishlistCounters();
                 });
             }
+
+            // Card click / Enter / Space → the product permalink.
+            const goToProduct = () => {
+                // A product with no slug has no addressable page — bail rather
+                // than send the visitor to a 404.
+                if (!product.slug) return;
+                window.location.href = BOX_PRODUCT_URL_BASE + encodeURIComponent(product.slug) + "/";
+            };
+
+            block.addEventListener("click", (e) => {
+                // Guard by target, not just on the stopPropagation above:
+                // add-boxes-to-wishlist.js binds the same CTA and only calls
+                // preventDefault(), so its clicks still bubble to here.
+                if (e.target.closest(".packages-button, a, button")) return;
+                goToProduct();
+            });
+            block.addEventListener("keydown", (e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                if (e.target.closest(".packages-button, a, button")) return;
+                e.preventDefault();
+                goToProduct();
+            });
 
             wrapper.appendChild(block);
         });

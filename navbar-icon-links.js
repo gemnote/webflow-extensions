@@ -1,19 +1,24 @@
 /*************************************
- * Navbar cart + wishlist icon links
+ * Navbar cart + wishlist + market icon links
  *
- * The Webflow navbar renders both icons as plain <div>s (.cart-header-block /
- * .wishlist-block), so they aren't clickable. Wire them here rather than as
- * Webflow Link Blocks so the destination stays environment-agnostic.
+ * The Webflow navbar renders these icons as plain <div>s (.cart-header-block /
+ * .wishlist-block / .user-header-block), so they aren't clickable. Wire them here
+ * rather than as Webflow Link Blocks so the destination stays
+ * environment-agnostic.
  *
- * Paths are SAME-ORIGIN and relative on purpose — no host is hardcoded. merchOS
- * is served under the same domain as the Webflow site (that's also why the navbar
- * badges can read merchOS's `merch-cart` out of localStorage at all — localStorage
- * is per-origin), so production, staging and local all resolve from whatever host
- * the page is already on.
+ * The cart and wishlist paths are SAME-ORIGIN and relative on purpose — no host is
+ * hardcoded. merchOS is served under the same domain as the Webflow site (that's
+ * also why the navbar badges can read merchOS's `merch-cart` out of localStorage at
+ * all — localStorage is per-origin), so production, staging and local all resolve
+ * from whatever host the page is already on.
+ *
+ * The market icon is the one exception: it points at the store's own login host,
+ * which is a DIFFERENT origin from the Webflow site, so it has to be absolute.
  *
  * Targets mirror merchOS's own navbar (frontend/src/components/Navbar/index.vue):
- *   cart  → /products/checkout/
- *   heart → /products/favorites/
+ *   cart   → /products/checkout/
+ *   heart  → /products/favorites/
+ *   market → http://store.gemnote.com/auth/login
  *
  * DELEGATION, not per-element listeners. The desktop and mobile navbars are
  * separate copies of the same blocks, and the mobile one is frequently revealed
@@ -27,11 +32,14 @@
 (function () {
     const CART_PATH = "/products/checkout/";
     const FAVORITES_PATH = "/products/favorites/";
+    // Absolute, cross-origin: the store login lives on its own host.
+    const MARKET_URL = "http://store.gemnote.com/auth/login";
 
     // Explicit class list first — cheapest and covers the known navbars. Both the
     // desktop and mobile copies use these same classes.
     const CART_SEL = ".cart-header-block, .cart-block";
     const FAVORITES_SEL = ".wishlist-block, .wishlist-header-block";
+    const MARKET_SEL = ".user-header-block";
 
     // Fallback for a navbar whose wrapper classes differ: the counter badges carry
     // known ids, so walk up from one to the icon block that contains it.
@@ -52,6 +60,7 @@
 
         if (target.closest(CART_SEL)) return CART_PATH;
         if (target.closest(FAVORITES_SEL)) return FAVORITES_PATH;
+        if (target.closest(MARKET_SEL)) return MARKET_URL;
 
         for (const [id, path] of COUNTER_IDS) {
             const counter = document.getElementById(id);
@@ -69,8 +78,9 @@
     }
 
     function navigate(path) {
-        // Root-relative: the browser resolves it against the current origin, so the
-        // same build works on every domain we deploy to.
+        // Root-relative paths resolve against the current origin, so the same build
+        // works on every domain we deploy to; the market URL is already absolute and
+        // passes through unchanged.
         window.location.href = path;
     }
 
@@ -135,13 +145,16 @@
      * point of delegating. Re-run on pageshow to pick up a restored page.
      */
     function decorate() {
-        document.querySelectorAll(`${CART_SEL}, ${FAVORITES_SEL}`).forEach((el) => {
+        document.querySelectorAll(`${CART_SEL}, ${FAVORITES_SEL}, ${MARKET_SEL}`).forEach((el) => {
             if (el.closest("a")) return;
             el.style.cursor = "pointer";
             el.setAttribute("role", "link");
             el.setAttribute("tabindex", "0");
             if (!el.getAttribute("aria-label")) {
-                el.setAttribute("aria-label", el.matches(CART_SEL) ? "Cart" : "Favorites");
+                let label = "Favorites";
+                if (el.matches(CART_SEL)) label = "Cart";
+                else if (el.matches(MARKET_SEL)) label = "Sign in";
+                el.setAttribute("aria-label", label);
             }
         });
     }

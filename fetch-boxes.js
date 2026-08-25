@@ -6,13 +6,18 @@
 const boxSiteUrl = window.location.pathname.split("/").filter(Boolean);
 const boxSubUrl = boxSiteUrl[boxSiteUrl.length - 2];
 // Resolve the merchOS origin from the current environment so boxes target
-// staging vs production with no manual edits. The Webflow site and the merchOS
-// API are separate hosts, so window.location.origin can't be used directly
-// (that host returns HTML, not JSON). Default to production. Uniquely named to
-// avoid colliding with any global BASE_URL declared by another script.
+// staging vs production with no manual edits. Mirrors BASE_ORIGIN in
+// fetch-products.js — see the long comment there for why the current origin is
+// preferred (merchOS now serves gemnote.com too, and cart/wishlist live in
+// per-origin localStorage) and why this is an allowlist rather than a broad
+// *.gemnote.com match. Hosts that don't serve merchOS (.webflow.io previews,
+// local dev) fall back to a real merchOS host, defaulting to production.
+// Uniquely named to avoid colliding with any global BASE_URL declared by
+// another script.
+const BOX_MERCHOS_HOSTS = /^(?:www\.)?gemnote\.com$|merchos\.gemnote\.com$/i;
 const BOX_BASE_ORIGIN = (function () {
     const { origin, hostname } = window.location;
-    if (/merchos\.gemnote\.com$/i.test(hostname)) return origin;
+    if (BOX_MERCHOS_HOSTS.test(hostname)) return origin;
     const isStaging = /staging|\.webflow\.io$|localhost|127\.0\.0\.1|\.local$/i.test(hostname);
     return isStaging
         ? 'https://staging-merchos.gemnote.com'

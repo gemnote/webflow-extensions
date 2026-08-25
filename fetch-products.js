@@ -9,15 +9,30 @@
      * Constants
      *************************************/
     // Resolve the merchOS origin from the current environment so the same script
-    // targets staging vs production with no manual edits. The Webflow site and
-    // the merchOS app/API are separate hosts, so we can't just use
-    // window.location.origin — that host doesn't serve /api or /products and
-    // returns HTML. Map by hostname instead, defaulting to production so prod is
-    // never accidentally pointed at staging.
+    // targets staging vs production with no manual edits.
+    //
+    // Prefer the CURRENT origin whenever this host serves merchOS itself — which
+    // now includes gemnote.com, since merchOS was deployed there alongside the
+    // Webflow pages (both /products/<slug>/ and /api/v1/ answer on
+    // www.gemnote.com). Keeping links same-origin matters: sending a visitor on
+    // gemnote.com to merchos.gemnote.com bounces them to a different host
+    // mid-session and strands the cart/wishlist, which live in per-origin
+    // localStorage.
+    //
+    // Hosts that DON'T serve merchOS (Webflow's .webflow.io previews, local dev)
+    // still can't use window.location.origin — that host returns HTML for /api —
+    // so they fall back to a real merchOS host, defaulting to production so prod
+    // is never accidentally pointed at staging.
+    //
+    // Allowlist rather than a broad *.gemnote.com match, because sibling
+    // subdomains (nuxt.gemnote.com, store.gemnote.com) do not serve merchOS.
+    // Add a host here when it starts serving the merchOS app.
+    const MERCHOS_HOSTS = /^(?:www\.)?gemnote\.com$|merchos\.gemnote\.com$/i;
     const BASE_ORIGIN = (function () {
         const { origin, hostname } = window.location;
-        // Already on a merchOS host (staging or prod) → use it directly.
-        if (/merchos\.gemnote\.com$/i.test(hostname)) return origin;
+        // Already on a host that serves merchOS (gemnote.com, staging or prod
+        // merchOS) → use it directly.
+        if (MERCHOS_HOSTS.test(hostname)) return origin;
         // Otherwise pick the merchOS host matching this environment.
         const isStaging = /staging|\.webflow\.io$|localhost|127\.0\.0\.1|\.local$/i.test(hostname);
         return isStaging

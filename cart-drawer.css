@@ -1,0 +1,380 @@
+/* Ported from merchOS frontend/src/components/Lookbook/CartDrawer.vue.
+   Class names are kept identical to the Vue component's scoped styles so a
+   later design change over there can be copied across with little editing. */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap');
+
+.cart-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    /* Webflow's navbar sits at 1000 and the old cart dropdown at 1000 too, so
+       the drawer has to clear both. Overridable via the `zIndex` config. */
+    z-index: 9999;
+    display: flex;
+    justify-content: flex-end;
+    background: rgba(34, 33, 31, 0.38);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.cart-drawer-overlay.is-open {
+    opacity: 1;
+}
+
+.cart-drawer {
+    display: flex;
+    flex-direction: column;
+    width: min(510px, 100vw);
+    height: 100%;
+    box-sizing: border-box;
+    background: var(--Background, #FCFAF4);
+    border-left: 0.5px solid var(--Black, #22211F);
+    transform: translateX(100%);
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cart-drawer-overlay.is-open .cart-drawer {
+    transform: translateX(0);
+}
+
+/* Webflow's global stylesheet styles bare h2/h3/p/button, so the drawer
+   neutralises those inside itself rather than fighting them rule by rule.
+   The tags sit in :where() so this whole rule weighs the same as a single
+   class: enough to beat Webflow's element selectors, but not enough to beat
+   the component's own .cd-line-meta / .cart-drawer-note / .cd-line-brand
+   rules below, which it was otherwise flattening — their margins and the
+   brand's 500 weight were being reset away. */
+.cart-drawer :where(h2, h3, p) {
+    margin: 0;
+    padding: 0;
+    font-weight: 400;
+}
+
+.cart-drawer :where(button) {
+    margin: 0;
+    font-family: inherit;
+}
+
+.cart-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px;
+    border-bottom: 0.5px solid var(--Black, #E4E1DB);
+}
+
+.cart-drawer-title {
+    margin: 0;
+    color: var(--Black, #22211F);
+
+    /* H3 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 32px; /* 100% */
+    letter-spacing: -1.28px;
+}
+
+.cart-drawer-close {
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    line-height: 0;
+}
+
+/* Hover state of merchOS's CircularCrossButton: the outline glyph fades out
+   while a solid disc and a white X fade in. */
+.cart-drawer-close .icon-disc,
+.cart-drawer-close .icon-x {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.cart-drawer-close .icon-glyph {
+    transition: opacity 0.15s ease;
+}
+
+.cart-drawer-close:hover .icon-disc,
+.cart-drawer-close:hover .icon-x {
+    opacity: 1;
+}
+
+.cart-drawer-close:hover .icon-glyph {
+    opacity: 0;
+}
+
+/* The list is the only part that scrolls — the heading and the subtotal stay
+   put, so the CTA is always reachable however long the cart is. */
+.cart-drawer-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 24px;
+}
+
+.cart-drawer-empty {
+    margin: 32px 0;
+    color: var(--Grey2, #7B776F);
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 14px;
+}
+
+.cd-line {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 0.5px solid #E4E1DB;
+}
+
+.cd-line-thumb {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.cd-line-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cd-line-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cd-line-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cd-line-name {
+    margin: 0;
+    min-width: 0;
+    color: var(--Black, #22211F);
+
+    /* B1 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px; /* 150% */
+    letter-spacing: -0.48px;
+}
+
+.cd-line-price {
+    flex-shrink: 0;
+    color: #000;
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px; /* 150% */
+    letter-spacing: -0.48px;
+    white-space: nowrap;
+}
+
+/* merchOS makes this a button through to the brand page; the Webflow lookbook
+   has no brand route, so it stays plain text in the same type style. */
+.cd-line-brand {
+    align-self: flex-start;
+    /* Not in merchOS's rule: there this is a <button>, which has no default
+       margin to clear. It is a <p> here, so it needs one. */
+    margin: 0;
+    color: var(--Black, #22211F);
+
+    /* B2 Bold */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px; /* 157.143% */
+    letter-spacing: -0.42px;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: none;
+    text-decoration-thickness: auto;
+    text-underline-offset: auto;
+    text-underline-position: from-font;
+}
+
+.cd-line-meta {
+    margin: 2px 0 0;
+    color: var(--Grey2, #7B776F);
+
+    /* B2 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: -0.42px;
+}
+
+.cd-line-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+/* Both the remove button and the edit link, which is an <a> so it keeps
+   middle-click and "open in new tab". */
+.cd-line-action {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    line-height: 0;
+    text-decoration: none;
+}
+
+.cd-line-action:hover {
+    opacity: 0.6;
+}
+
+.cart-drawer-foot {
+    flex-shrink: 0;
+    padding: 20px 24px 24px;
+    border-top: 0.5px solid var(--Black, #22211F);
+    background: var(--Background, #FCFAF4);
+}
+
+.cart-drawer-subtotal {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.cart-drawer-subtotal-label {
+    color: var(--Black, #22211F);
+
+    /* B1 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px; /* 150% */
+    letter-spacing: -0.48px;
+}
+
+.cart-drawer-subtotal-value {
+    color: #000;
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px; /* 100% */
+    letter-spacing: -0.96px;
+}
+
+.cart-drawer-note {
+    margin: 10px 0 16px;
+    color: var(--Grey, #AAA59B);
+
+    /* B2 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: -0.42px;
+}
+
+/* merchOS's DarkButton, inlined. Its look comes from two places: the shared
+   .call-for-action-dark base in assets/css/custom-buttons-designs.css, which
+   DarkButton @imports (uppercase DM Mono, 36px pill), and DarkButton's own
+   overrides (0.48px tracking, the #D7DEE2 hover). CartDrawer.vue then makes it
+   full-bleed and centred. The Webflow site has its own .call-for-action-dark
+   of a different shape, so all of it is restated here rather than inherited.
+   !important on the family matches the base rule, which needs it to win
+   against the host page's own button styles. */
+.cart-drawer-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 6px 24px;
+    border: 1px solid #22211F;
+    border-radius: 999px;
+    background: #22211F;
+    color: #F5F2EE;
+    cursor: pointer;
+    text-decoration: none;
+
+    font-family: "DM Mono", monospace !important;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px; /* 157.143% */
+    letter-spacing: 0.48px;
+    transition: all 0.3s ease;
+}
+
+.cart-drawer-cta:not(.is-disabled):hover {
+    background: #D7DEE2;
+    color: #000;
+    border-color: #000;
+}
+
+.cart-drawer-cta.is-disabled {
+    background: transparent;
+    color: #AAA59B;
+    border-color: #AAA59B;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.cart-drawer-cta-arrow {
+    flex-shrink: 0;
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+.cart-drawer-cta:not(.is-disabled):hover .cart-drawer-cta-arrow {
+    transform: translateX(4px);
+}
+
+@media (max-width: 767px) {
+    .cart-drawer {
+        width: 100vw;
+        border-left: none;
+    }
+
+    .cart-drawer-head,
+    .cart-drawer-foot {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .cart-drawer-body {
+        padding: 0 16px;
+    }
+
+    .cart-drawer-title {
+        font-size: 26px;
+        line-height: 30px;
+        letter-spacing: -1.04px;
+    }
+}

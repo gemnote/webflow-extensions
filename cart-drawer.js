@@ -25,7 +25,6 @@
     const config = Object.assign({
         // merchOS's persisted Pinia cart store.
         merchCartKey: "merch-cart",
-        triggerSelector: ".cart-block",
         // Elements whose text is set to the number of lines in the cart.
         // The lookbook's #wishlist-counter is deliberately not in here: it
         // counts favourites, which is a separate list.
@@ -401,22 +400,15 @@
         else syncCounters(cartItems(readCart()).length);
     });
 
-    ready(() => {
-        syncCounters(cartItems(readCart()).length);
+    /* No listener on the cart icon here on purpose. navbar-icon-links.js owns
+     * every navbar icon — it already handles click, Enter/Space, iOS touch (a
+     * bare <div> does not reliably fire click there) and navbars Webflow
+     * re-renders after load. It calls GemnoteCartDrawer.toggle() for the cart.
+     * A second capture listener here would either lose the race or, if it won,
+     * toggle the drawer twice. Pages without that script drive the drawer
+     * through the public API below. */
 
-        const triggers = document.querySelectorAll(config.triggerSelector);
-        if (!triggers.length) return;
-
-        const mobileNavMenu = document.querySelector(".mobile-nav-menu");
-
-        triggers.forEach((trigger) => {
-            trigger.addEventListener("click", (event) => {
-                event.stopPropagation();
-                if (mobileNavMenu) mobileNavMenu.style.display = "none";
-                toggle();
-            });
-        });
-    });
+    ready(() => syncCounters(cartItems(readCart()).length));
 
     /***********************************************
      * Public API — for Webflow embeds that need to drive the drawer directly

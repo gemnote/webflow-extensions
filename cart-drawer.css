@@ -116,11 +116,44 @@
     padding: 0 24px;
 }
 
+.cart-drawer-body.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .cart-drawer-empty {
-    margin: 32px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 400px;
+    text-align: center;
+}
+
+.cart-drawer-empty-title {
+    margin: 0;
+    color: var(--Black, #22211F);
+
+    /* H5 */
+    font-family: "Host Grotesk", sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 32px;
+    letter-spacing: -0.72px;
+}
+
+.cart-drawer-empty-text {
+    margin: 8px 0 24px;
     color: var(--Grey2, #7B776F);
+
+    /* B2 */
     font-family: "Host Grotesk", sans-serif;
     font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+    letter-spacing: -0.42px;
 }
 
 .cd-line {
@@ -332,18 +365,33 @@
     transition: all 0.3s ease;
 }
 
-.cart-drawer-cta:not(.is-disabled):hover {
+.cart-drawer-cta:hover {
     background: #D7DEE2;
     color: #000;
     border-color: #000;
 }
 
-.cart-drawer-cta.is-disabled {
-    background: transparent;
-    color: #AAA59B;
-    border-color: #AAA59B;
-    cursor: not-allowed;
-    pointer-events: none;
+.cart-drawer-cta[hidden] {
+    display: none;
+}
+
+/* DarkButton's trailing-arrow padding at its natural width, not full-bleed. */
+.cart-drawer-empty-cta {
+    width: auto;
+    gap: 8px;
+    padding: 6px 16px;
+}
+
+.cart-drawer-foot.is-empty {
+    border-top-color: #E4E1DB;
+}
+
+.cart-drawer-foot.is-empty .cart-drawer-subtotal-value {
+    color: var(--Grey, #AAA59B);
+}
+
+.cart-drawer-foot.is-empty .cart-drawer-note {
+    margin-bottom: 0;
 }
 
 .cart-drawer-cta-arrow {
@@ -352,7 +400,7 @@
     will-change: transform;
 }
 
-.cart-drawer-cta:not(.is-disabled):hover .cart-drawer-cta-arrow {
+.cart-drawer-cta:hover .cart-drawer-cta-arrow {
     transform: translateX(4px);
 }
 

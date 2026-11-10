@@ -31,14 +31,18 @@
         counterSelector: "#cart-counter, #mobile-cart-counter",
 
         title: "Your cart",
-        emptyText: "Your cart is empty.",
+        emptyTitle: "Your cart is empty",
+        emptyText: "Looks like you haven't added any items yet.<br>Start exploring our collection to find the perfect merch.",
+        emptyCtaLabel: "Start shopping",
+        emptyNote: "Items will appear here as you add them to your cart.",
         note: "Logo and decoration included. You'll split sizes and approve final proofs next.",
         ctaLabel: "Go to checkout",
 
         // Deliberately relative: merchOS runs on this origin, which is also
         // where the cart being linked to lives.
         checkoutPath: "/products/checkout/",
-        // /products/<slug>/ is merchOS's product permalink.
+        // /products/<slug>/ is merchOS's product permalink, and /products/
+        // itself is the shop the empty state's CTA leads to.
         productPath: "/products/",
 
         zIndex: 9999,
@@ -235,7 +239,9 @@
     `;
 
     const body = overlay.querySelector(".cart-drawer-body");
+    const foot = overlay.querySelector(".cart-drawer-foot");
     const subtotalValue = overlay.querySelector(".cart-drawer-subtotal-value");
+    const note = overlay.querySelector(".cart-drawer-note");
     const cta = overlay.querySelector(".cart-drawer-cta");
 
     // Webflow serves these scripts deferred, so DOMContentLoaded has usually
@@ -289,16 +295,25 @@
     const render = () => {
         const items = cartItems(readCart());
 
-        body.innerHTML = items.length
-            ? items.map(lineHtml).join("")
-            : `<p class="cart-drawer-empty">${escapeHtml(config.emptyText)}</p>`;
+        const isEmpty = !items.length;
+
+        // emptyText is config-owned copy that carries a <br>, so it is not escaped.
+        body.innerHTML = isEmpty
+            ? `<div class="cart-drawer-empty">
+                 <h3 class="cart-drawer-empty-title">${escapeHtml(config.emptyTitle)}</h3>
+                 <p class="cart-drawer-empty-text">${config.emptyText}</p>
+                 <a class="cart-drawer-cta cart-drawer-empty-cta" href="${escapeHtml(config.productPath)}">${escapeHtml(config.emptyCtaLabel)}${ARROW_ICON}</a>
+               </div>`
+            : items.map(lineHtml).join("");
+        body.classList.toggle("is-empty", isEmpty);
+        foot.classList.toggle("is-empty", isEmpty);
 
         const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
         subtotalValue.textContent = formatCurrency(subtotal);
 
-        // merchOS disables the checkout CTA on an empty cart.
-        cta.classList.toggle("is-disabled", !items.length);
-        cta.setAttribute("aria-disabled", items.length ? "false" : "true");
+        // merchOS drops the checkout CTA on an empty cart and swaps the note.
+        note.textContent = isEmpty ? config.emptyNote : config.note;
+        cta.hidden = isEmpty;
 
         syncCounters(items.length);
     };
@@ -378,14 +393,18 @@
     overlay.querySelector(".cart-drawer-close").addEventListener("click", close);
 
     body.addEventListener("click", (event) => {
+        // Already on the shop: closing is all "Start shopping" needs to do.
+        const shop = event.target.closest(".cart-drawer-empty-cta");
+        if (shop && window.location.pathname === config.productPath) {
+            event.preventDefault();
+            close();
+            return;
+        }
+
         const button = event.target.closest(".cd-line-remove");
         if (!button) return;
         event.stopPropagation();
         removeLine(button.dataset.key);
-    });
-
-    cta.addEventListener("click", (event) => {
-        if (cta.classList.contains("is-disabled")) event.preventDefault();
     });
 
     document.addEventListener("gemnote:cart-updated", () => {
